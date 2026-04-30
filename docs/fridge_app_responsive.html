@@ -1,0 +1,549 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.app{width:100%;min-height:600px;background:#f7f6f3;font-family:var(--font-sans);display:flex;flex-direction:column;}
+
+/* 상단 네비 (데스크톱) */
+.topnav{background:#fff;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;padding:0 24px;height:52px;flex-shrink:0;}
+.topnav-logo{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-right:32px;white-space:nowrap;}
+.topnav-menu{display:flex;align-items:center;gap:2px;flex:1;}
+.topnav-item{position:relative;}
+.topnav-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;background:transparent;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border-radius:7px;font-family:var(--font-sans);white-space:nowrap;}
+.topnav-btn:hover,.topnav-btn.active{background:#f7f6f3;color:var(--color-text-primary);}
+.topnav-btn svg{flex-shrink:0;}
+.topnav-btn .caret{transition:transform 0.15s;}
+.topnav-item:hover .caret{transform:rotate(180deg);}
+.dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:0.5px solid var(--color-border-secondary);border-radius:10px;min-width:160px;padding:5px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+.topnav-item:hover .dropdown{display:block;}
+.dd-item{display:flex;align-items:center;gap:8px;padding:8px 11px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;border-radius:7px;white-space:nowrap;}
+.dd-item:hover{background:#f7f6f3;color:var(--color-text-primary);}
+.dd-item.on{color:var(--color-text-primary);background:#f0ede8;}
+.dd-badge{margin-left:auto;background:#993C1D;color:#F5C4B3;font-size:10px;padding:1px 6px;border-radius:6px;}
+.topnav-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.topnav-search{display:flex;align-items:center;gap:6px;background:#f7f6f3;border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:0 10px;height:32px;}
+.topnav-search input{border:none;background:transparent;font-size:12px;color:var(--color-text-primary);outline:none;width:130px;font-family:var(--font-sans);}
+.topnav-search input::placeholder{color:var(--color-text-tertiary);}
+.topnav-addbtn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:#2C2C2A;color:#D3D1C7;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-sans);white-space:nowrap;}
+.topnav-addbtn:hover{background:#444441;}
+.topnav-av{width:30px;height:30px;border-radius:50%;background:#2C2C2A;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#D3D1C7;cursor:pointer;flex-shrink:0;}
+
+/* 모바일 햄버거 */
+.mob-header{display:none;background:#fff;border-bottom:0.5px solid var(--color-border-tertiary);align-items:center;padding:0 16px;height:52px;flex-shrink:0;}
+.mob-logo{flex:1;font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.mob-right{display:flex;align-items:center;gap:8px;}
+.ham-btn{width:34px;height:34px;border-radius:8px;background:#f7f6f3;border:0.5px solid var(--color-border-secondary);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+.ham-btn span{display:block;width:14px;height:1.5px;background:#5F5E5A;border-radius:1px;}
+
+/* 사이드바 (모바일) */
+.overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.28);z-index:40;}
+.overlay.on{display:block;}
+.sidebar{position:absolute;top:0;left:0;bottom:0;width:220px;background:#1e1e1c;z-index:50;transform:translateX(-100%);transition:transform 0.2s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.sidebar.open{transform:translateX(0);}
+.sb-top{padding:18px 16px 14px;border-bottom:0.5px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;}
+.sb-logo{font-size:14px;font-weight:500;color:#e8e6e0;}
+.sb-close{width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,0.06);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sb-nav{padding:8px 0;flex:1;overflow-y:auto;}
+.sb-sec{font-size:10px;color:rgba(255,255,255,0.22);letter-spacing:0.07em;padding:12px 16px 4px;}
+.sb-row{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:13px;color:rgba(255,255,255,0.42);cursor:pointer;border-left:2px solid transparent;}
+.sb-row:hover{color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.03);}
+.sb-row.on{color:#e8e6e0;background:rgba(255,255,255,0.06);border-left-color:#888780;}
+.sb-badge{margin-left:auto;background:#993C1D;color:#F5C4B3;font-size:10px;padding:1px 6px;border-radius:6px;}
+
+/* 콘텐츠 영역 */
+.content{flex:1;overflow-y:auto;padding:20px 24px;position:relative;}
+.page{display:none;}
+.page.on{display:block;}
+
+/* 하단 네비 (모바일) */
+.bot-nav{display:none;background:#fff;border-top:0.5px solid var(--color-border-tertiary);height:56px;flex-shrink:0;}
+.bot-nav-inner{display:flex;height:100%;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;font-family:var(--font-sans);padding:4px 0;}
+.bn-item .bn-lbl{font-size:10px;color:var(--color-text-tertiary);}
+.bn-item.on .bn-lbl{color:#2C2C2A;font-weight:500;}
+.bn-item.on svg{stroke:#2C2C2A;}
+.bn-item svg{stroke:var(--color-text-tertiary);}
+
+/* 공통 컴포넌트 */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.stat{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px;cursor:pointer;}
+.stat:hover{background:#f7f6f3;}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.stat-ic{width:28px;height:28px;border-radius:7px;background:#f7f6f3;display:flex;align-items:center;justify-content:center;}
+.warn-t{font-size:10px;color:#993C1D;background:#FAECE7;padding:2px 7px;border-radius:6px;}
+.stat-n{font-size:26px;font-weight:500;color:var(--color-text-primary);letter-spacing:-0.02em;}
+.stat-l{font-size:11px;color:var(--color-text-tertiary);margin-top:2px;}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.sec-t{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.sec-more{font-size:11px;color:var(--color-text-tertiary);cursor:pointer;}
+.sec-more:hover{color:var(--color-text-secondary);}
+.r-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+.r-card{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;cursor:pointer;}
+.r-card:hover{border-color:var(--color-border-secondary);}
+.r-thumb{height:80px;display:flex;align-items:center;justify-content:center;}
+.r-thumb.t1{background:#f0ede8;}.r-thumb.t2{background:#e8ede8;}.r-thumb.t3{background:#ede8e8;}.r-thumb.t4{background:#e8eaed;}.r-thumb.t5{background:#edeae3;}
+.r-info{padding:9px 11px;}
+.r-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;}
+.r-ok{background:#f0ede8;color:#444441;font-size:10px;padding:2px 7px;border-radius:5px;}
+.r-near{background:#FAECE7;color:#712B13;font-size:10px;padding:2px 7px;border-radius:5px;}
+.r-miss{background:#f7f6f3;color:#5F5E5A;font-size:10px;padding:2px 7px;border-radius:5px;}
+.bot-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.card{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px;}
+.exp-row{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.exp-row:last-child{border-bottom:none;}
+.exp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.exp-dot.r{background:#D85A30;}.exp-dot.a{background:#BA7517;}.exp-dot.g{background:#639922;}
+.exp-nm{font-size:12px;color:var(--color-text-primary);flex:1;}
+.exp-d{font-size:11px;font-weight:500;}
+.exp-d.r{color:#993C1D;}.exp-d.a{color:#854F0B;}.exp-d.g{color:#3B6D11;}
+.shop-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-primary);}
+.shop-row:last-child{border-bottom:none;}
+.shop-row input{accent-color:#444441;cursor:pointer;}
+.shop-from{font-size:10px;color:var(--color-text-tertiary);margin-left:auto;}
+.done{text-decoration:line-through;color:var(--color-text-tertiary);}
+.add-link{font-size:11px;color:var(--color-text-secondary);margin-top:9px;cursor:pointer;display:block;padding-top:9px;border-top:0.5px solid var(--color-border-tertiary);}
+.f-pills{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.f-pill{padding:5px 13px;font-size:12px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:#fff;color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);}
+.f-pill.on{background:#2C2C2A;color:#D3D1C7;border-color:#2C2C2A;}
+.ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+.ing-card{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.ing-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.ing-dot.ref{background:#85B7EB;}.ing-dot.frz{background:#5DCAA5;}.ing-dot.dry{background:#EF9F27;}
+.ing-name{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;}
+.ing-loc{font-size:11px;color:var(--color-text-tertiary);}
+.ing-exp{font-size:11px;margin-left:auto;}
+.ing-exp.r{color:#993C1D;}.ing-exp.a{color:#854F0B;}.ing-exp.ok{color:var(--color-text-tertiary);}
+.rec-addbtn{display:flex;align-items:center;gap:6px;padding:8px 15px;background:#2C2C2A;color:#D3D1C7;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-sans);margin-bottom:14px;}
+.rec-list{display:flex;flex-direction:column;gap:9px;}
+.rec-row{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.rec-row:hover{border-color:var(--color-border-secondary);}
+.rec-thumb{width:46px;height:46px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rec-thumb.t1{background:#f0ede8;}.rec-thumb.t2{background:#e8ede8;}.rec-thumb.t3{background:#ede8e8;}.rec-thumb.t4{background:#e8eaed;}.rec-thumb.t5{background:#edeae3;}
+.rec-body{flex:1;}
+.rec-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;}
+.rec-meta{font-size:11px;color:var(--color-text-tertiary);}
+.suggest-card{background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;cursor:pointer;margin-bottom:9px;}
+.suggest-card:hover{border-color:var(--color-border-secondary);}
+.suggest-card.expanded{border-color:#888780;}
+.sug-header{display:flex;align-items:center;gap:12px;padding:12px 14px;}
+.sug-body{border-top:0.5px solid var(--color-border-tertiary);padding:12px 14px;background:#fafaf9;}
+.miss-label{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;}
+.miss-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-primary);margin-bottom:6px;}
+.miss-dot{width:6px;height:6px;border-radius:50%;background:#D85A30;flex-shrink:0;}
+.add-shop-btn{font-size:11px;padding:3px 10px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:#fff;color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);margin-left:auto;}
+.add-shop-btn:hover{background:#f7f6f3;}
+.add-shop-btn.added{background:#f0ede8;color:#444441;border-color:#c8b474;}
+.add-all-btn{width:100%;padding:9px;background:#2C2C2A;color:#D3D1C7;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-sans);margin-top:4px;}
+.add-all-btn:hover{background:#444441;}
+.have-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.have-tag{font-size:10px;background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:5px;}
+.shop-item{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:10px;margin-bottom:6px;font-size:13px;color:var(--color-text-primary);}
+.shop-item input{accent-color:#444441;cursor:pointer;width:15px;height:15px;}
+.shop-item-name{flex:1;}
+.shop-item-from{font-size:10px;color:var(--color-text-tertiary);background:#f7f6f3;padding:2px 7px;border-radius:5px;}
+.shop-item.ck .shop-item-name{text-decoration:line-through;color:var(--color-text-tertiary);}
+.shop-sec-t{font-size:11px;color:var(--color-text-tertiary);letter-spacing:0.05em;margin:14px 0 8px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;}
+.shop-add-row{display:flex;gap:8px;margin-bottom:16px;}
+.shop-add-input{flex:1;padding:0 12px;height:36px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:#fff;font-size:12px;color:var(--color-text-primary);font-family:var(--font-sans);outline:none;}
+.shop-add-input:focus{border-color:#888780;}
+.shop-add-go{padding:0 14px;height:36px;background:#2C2C2A;color:#D3D1C7;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-sans);}
+.clr{font-size:11px;color:var(--color-text-tertiary);cursor:pointer;}
+.clr:hover{color:var(--color-text-secondary);}
+
+/* 반응형 */
+@media(max-width:640px){
+  .topnav{display:none;}
+  .mob-header{display:flex;}
+  .bot-nav{display:block;}
+  .content{padding:14px 14px 14px;}
+  .stat-row{grid-template-columns:repeat(3,1fr);gap:7px;}
+  .bot-row{grid-template-columns:1fr;}
+  .ing-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+
+<h2 class="sr-only">나의 냉장고 — 반응형 재료/레시피 관리 웹앱</h2>
+
+<div class="app" id="app">
+
+  <!-- 데스크톱 상단 네비 -->
+  <nav class="topnav">
+    <div class="topnav-logo">나의 냉장고</div>
+    <div class="topnav-menu">
+      <div class="topnav-item">
+        <button class="topnav-btn" onclick="goPage('dash')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1" y="1" width="5" height="5" rx="1.2"/><rect x="8" y="1" width="5" height="5" rx="1.2"/><rect x="1" y="8" width="5" height="5" rx="1.2"/><rect x="8" y="8" width="5" height="5" rx="1.2"/></svg>
+          대시보드
+        </button>
+      </div>
+      <div class="topnav-item">
+        <button class="topnav-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1.5" y="1" width="11" height="12" rx="1.5"/><line x1="4" y1="4.5" x2="10" y2="4.5"/><line x1="4" y1="7" x2="10" y2="7"/><line x1="4" y1="9.5" x2="8" y2="9.5"/></svg>
+          재료
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" fill="none"><line x1="2" y1="3.5" x2="5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="6.5" x2="8" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="dropdown">
+          <div class="dd-item on" onclick="goPage('ing')">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1.5" y="1" width="11" height="12" rx="1.5"/><line x1="4" y1="4.5" x2="10" y2="4.5"/><line x1="4" y1="7" x2="10" y2="7"/><line x1="4" y1="9.5" x2="8" y2="9.5"/></svg>
+            전체 재료
+          </div>
+          <div class="dd-item" onclick="goPage('ing')">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><circle cx="7" cy="7" r="5.5"/><line x1="7" y1="4" x2="7" y2="7"/><line x1="7" y1="7" x2="9.2" y2="9.2"/></svg>
+            유통기한 임박
+            <span class="dd-badge">3</span>
+          </div>
+        </div>
+      </div>
+      <div class="topnav-item">
+        <button class="topnav-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M2 2.5h10v9a1 1 0 01-1 1H3a1 1 0 01-1-1v-9z"/><line x1="4" y1="6" x2="10" y2="6"/><line x1="4" y1="8.5" x2="8" y2="8.5"/></svg>
+          레시피
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" fill="none"><line x1="2" y1="3.5" x2="5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="6.5" x2="8" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="dropdown">
+          <div class="dd-item" onclick="goPage('rec')">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M2 2.5h10v9a1 1 0 01-1 1H3a1 1 0 01-1-1v-9z"/><line x1="4" y1="6" x2="10" y2="6"/></svg>
+            내 레시피
+          </div>
+          <div class="dd-item" onclick="goPage('suggest')">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><polygon points="7,1.5 8.8,5.2 13,5.7 10,8.6 10.6,12.5 7,10.5 3.4,12.5 4,8.6 1,5.7 5.2,5.2"/></svg>
+            추천 레시피
+          </div>
+        </div>
+      </div>
+      <div class="topnav-item">
+        <button class="topnav-btn" onclick="goPage('shop')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><line x1="2" y1="4" x2="12" y2="4" stroke-linecap="round"/><line x1="2" y1="7" x2="9" y2="7" stroke-linecap="round"/><line x1="2" y1="10" x2="7" y2="10" stroke-linecap="round"/></svg>
+          장보기
+        </button>
+      </div>
+    </div>
+    <div class="topnav-right">
+      <div class="topnav-search">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="var(--color-text-tertiary)" stroke-width="1.3"/><line x1="9.5" y1="9.5" x2="12" y2="12" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <input placeholder="재료, 레시피 검색..."/>
+      </div>
+      <button class="topnav-addbtn">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/></svg>
+        재료 추가
+      </button>
+      <div class="topnav-av">나</div>
+    </div>
+  </nav>
+
+  <!-- 모바일 헤더 -->
+  <div class="mob-header" id="mob-header">
+    <div class="mob-logo">나의 냉장고</div>
+    <div class="mob-right">
+      <div class="topnav-search" style="width:auto;">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="var(--color-text-tertiary)" stroke-width="1.3"/><line x1="9.5" y1="9.5" x2="12" y2="12" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <input placeholder="검색..." style="width:80px;"/>
+      </div>
+      <button class="topnav-addbtn" style="padding:6px 10px;">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/></svg>
+        추가
+      </button>
+      <div class="ham-btn" onclick="openSb()"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- 사이드바 오버레이 -->
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="overlay" id="overlay" onclick="closeSb()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sb-top">
+        <span class="sb-logo">나의 냉장고</span>
+        <button class="sb-close" onclick="closeSb()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="sb-nav">
+        <div class="sb-sec">메뉴</div>
+        <div class="sb-row" id="sb-dash" onclick="goPage('dash');closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1" y="1" width="5" height="5" rx="1.2"/><rect x="8" y="1" width="5" height="5" rx="1.2"/><rect x="1" y="8" width="5" height="5" rx="1.2"/><rect x="8" y="8" width="5" height="5" rx="1.2"/></svg>
+          대시보드
+        </div>
+        <div class="sb-sec">재료</div>
+        <div class="sb-row" id="sb-ing" onclick="goPage('ing');closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><rect x="1.5" y="1" width="11" height="12" rx="1.5"/><line x1="4" y1="4.5" x2="10" y2="4.5"/><line x1="4" y1="7" x2="10" y2="7"/><line x1="4" y1="9.5" x2="8" y2="9.5"/></svg>
+          전체 재료
+        </div>
+        <div class="sb-row" onclick="closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><circle cx="7" cy="7" r="5.5"/><line x1="7" y1="4" x2="7" y2="7"/><line x1="7" y1="7" x2="9.2" y2="9.2"/></svg>
+          유통기한 임박
+          <span class="sb-badge">3</span>
+        </div>
+        <div class="sb-sec">레시피</div>
+        <div class="sb-row" id="sb-rec" onclick="goPage('rec');closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M2 2.5h10v9a1 1 0 01-1 1H3a1 1 0 01-1-1v-9z"/><line x1="4" y1="6" x2="10" y2="6"/><line x1="4" y1="8.5" x2="8" y2="8.5"/></svg>
+          내 레시피
+        </div>
+        <div class="sb-row" id="sb-suggest" onclick="goPage('suggest');closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><polygon points="7,1.5 8.8,5.2 13,5.7 10,8.6 10.6,12.5 7,10.5 3.4,12.5 4,8.6 1,5.7 5.2,5.2"/></svg>
+          추천 레시피
+        </div>
+        <div class="sb-sec">기타</div>
+        <div class="sb-row" id="sb-shop" onclick="goPage('shop');closeSb()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1"><line x1="2" y1="4" x2="12" y2="4" stroke-linecap="round"/><line x1="2" y1="7" x2="9" y2="7" stroke-linecap="round"/><line x1="2" y1="10" x2="7" y2="10" stroke-linecap="round"/></svg>
+          장보기 목록
+        </div>
+      </div>
+    </div>
+
+    <!-- 콘텐츠 -->
+    <div class="content">
+
+      <div class="page on" id="page-dash">
+        <div class="stat-row">
+          <div class="stat">
+            <div class="stat-top"><div class="stat-ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="2" stroke="#5F5E5A" stroke-width="1.3"/><line x1="3" y1="7" x2="13" y2="7" stroke="#5F5E5A" stroke-width="1.1"/></svg></div><span class="warn-t">D-2 임박</span></div>
+            <div class="stat-n">18</div><div class="stat-l">냉장 재료</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top"><div class="stat-ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5V11L8 14L2 11V5L8 2Z" stroke="#5F5E5A" stroke-width="1.3"/></svg></div></div>
+            <div class="stat-n">7</div><div class="stat-l">냉동 재료</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top"><div class="stat-ic"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="6" width="10" height="8" rx="1.5" stroke="#5F5E5A" stroke-width="1.3"/><path d="M5.5 6V4.5a2.5 2.5 0 015 0V6" stroke="#5F5E5A" stroke-width="1.3"/></svg></div></div>
+            <div class="stat-n">12</div><div class="stat-l">상온 재료</div>
+          </div>
+        </div>
+        <div class="sec-hd"><div class="sec-t">만들 수 있는 레시피</div><div class="sec-more" onclick="goPage('suggest')">전체 →</div></div>
+        <div class="r-grid">
+          <div class="r-card"><div class="r-thumb t1"><svg width="34" height="34" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="27" rx="12" ry="4.5" fill="#c8b474"/><ellipse cx="19" cy="21" rx="10" ry="8" fill="#e8d48c"/></svg></div><div class="r-info"><div class="r-name">계란볶음밥</div><span class="r-ok">가능</span></div></div>
+          <div class="r-card"><div class="r-thumb t2"><svg width="34" height="34" viewBox="0 0 38 38" fill="none"><rect x="9" y="23" width="20" height="8" rx="3" fill="#8cb88c"/><rect x="11" y="15" width="16" height="10" rx="2" fill="#c8e8c8"/></svg></div><div class="r-info"><div class="r-name">두부김치찌개</div><span class="r-ok">가능</span></div></div>
+          <div class="r-card"><div class="r-thumb t3"><svg width="34" height="34" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="25" rx="9" ry="5" fill="#e8b0b2"/></svg></div><div class="r-info"><div class="r-name">새우볶음</div><span class="r-near">1개 부족</span></div></div>
+          <div class="r-card"><div class="r-thumb t4"><svg width="34" height="34" viewBox="0 0 38 38" fill="none"><rect x="10" y="19" width="18" height="8" rx="2" fill="#b8d0e4"/></svg></div><div class="r-info"><div class="r-name">된장찌개</div><span class="r-miss">2개 부족</span></div></div>
+          <div class="r-card"><div class="r-thumb t5"><svg width="34" height="34" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="21" rx="7" ry="5" fill="#ece8c0"/></svg></div><div class="r-info"><div class="r-name">계란찜</div><span class="r-ok">가능</span></div></div>
+        </div>
+        <div class="bot-row">
+          <div class="card">
+            <div class="sec-hd" style="margin-bottom:9px;"><div class="sec-t">유통기한 임박</div><div class="sec-more">전체 →</div></div>
+            <div class="exp-row"><div class="exp-dot r"></div><span class="exp-nm">우유</span><span class="exp-d r">D-2</span></div>
+            <div class="exp-row"><div class="exp-dot a"></div><span class="exp-nm">달걀</span><span class="exp-d a">D-5</span></div>
+            <div class="exp-row"><div class="exp-dot a"></div><span class="exp-nm">체다치즈</span><span class="exp-d a">D-7</span></div>
+            <div class="exp-row"><div class="exp-dot g"></div><span class="exp-nm">두부</span><span class="exp-d g">D-12</span></div>
+          </div>
+          <div class="card">
+            <div class="sec-hd" style="margin-bottom:9px;"><div class="sec-t">장보기 목록</div><div class="sec-more" onclick="goPage('shop')">전체 →</div></div>
+            <div class="shop-row"><input type="checkbox"/><span>청양고추</span><span class="shop-from">새우볶음</span></div>
+            <div class="shop-row"><input type="checkbox"/><span>된장</span><span class="shop-from">된장찌개</span></div>
+            <div class="shop-row"><input type="checkbox"/><span>감자</span><span class="shop-from">된장찌개</span></div>
+            <div class="shop-row"><input type="checkbox" checked/><span class="done">대파</span><span class="shop-from">완료</span></div>
+            <span class="add-link" onclick="goPage('suggest')">+ 추천에서 자동 추가 →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-ing">
+        <div class="f-pills">
+          <button class="f-pill on" onclick="setPill(this)">전체</button>
+          <button class="f-pill" onclick="setPill(this)">냉장</button>
+          <button class="f-pill" onclick="setPill(this)">냉동</button>
+          <button class="f-pill" onclick="setPill(this)">상온</button>
+        </div>
+        <div class="ing-grid">
+          <div class="ing-card"><div class="ing-dot ref"></div><div><div class="ing-name">달걀</div><div class="ing-loc">냉장</div></div><span class="ing-exp ok">D-5</span></div>
+          <div class="ing-card"><div class="ing-dot ref"></div><div><div class="ing-name">우유</div><div class="ing-loc">냉장</div></div><span class="ing-exp r">D-2</span></div>
+          <div class="ing-card"><div class="ing-dot ref"></div><div><div class="ing-name">두부</div><div class="ing-loc">냉장</div></div><span class="ing-exp ok">D-12</span></div>
+          <div class="ing-card"><div class="ing-dot ref"></div><div><div class="ing-name">김치</div><div class="ing-loc">냉장</div></div><span class="ing-exp ok">—</span></div>
+          <div class="ing-card"><div class="ing-dot ref"></div><div><div class="ing-name">체다치즈</div><div class="ing-loc">냉장</div></div><span class="ing-exp a">D-7</span></div>
+          <div class="ing-card"><div class="ing-dot frz"></div><div><div class="ing-name">냉동 새우</div><div class="ing-loc">냉동</div></div><span class="ing-exp ok">—</span></div>
+          <div class="ing-card"><div class="ing-dot frz"></div><div><div class="ing-name">냉동 만두</div><div class="ing-loc">냉동</div></div><span class="ing-exp ok">—</span></div>
+          <div class="ing-card"><div class="ing-dot dry"></div><div><div class="ing-name">라면</div><div class="ing-loc">상온</div></div><span class="ing-exp ok">—</span></div>
+          <div class="ing-card"><div class="ing-dot dry"></div><div><div class="ing-name">참기름</div><div class="ing-loc">상온</div></div><span class="ing-exp ok">—</span></div>
+          <div class="ing-card"><div class="ing-dot dry"></div><div><div class="ing-name">간장</div><div class="ing-loc">상온</div></div><span class="ing-exp ok">—</span></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-rec">
+        <button class="rec-addbtn">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="#D3D1C7" stroke-width="1.8" stroke-linecap="round"/></svg>
+          레시피 추가
+        </button>
+        <div class="rec-list">
+          <div class="rec-row"><div class="rec-thumb t1"><svg width="26" height="26" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="27" rx="12" ry="4.5" fill="#c8b474"/><ellipse cx="19" cy="21" rx="10" ry="8" fill="#e8d48c"/></svg></div><div class="rec-body"><div class="rec-title">계란볶음밥</div><div class="rec-meta">재료 4개 · 바로 가능</div></div><span class="r-ok">가능</span></div>
+          <div class="rec-row"><div class="rec-thumb t2"><svg width="26" height="26" viewBox="0 0 38 38" fill="none"><rect x="9" y="23" width="20" height="8" rx="3" fill="#8cb88c"/></svg></div><div class="rec-body"><div class="rec-title">두부김치찌개</div><div class="rec-meta">재료 6개 · 바로 가능</div></div><span class="r-ok">가능</span></div>
+          <div class="rec-row"><div class="rec-thumb t3"><svg width="26" height="26" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="25" rx="9" ry="5" fill="#e8b0b2"/></svg></div><div class="rec-body"><div class="rec-title">새우볶음</div><div class="rec-meta">재료 5개 · 청양고추 부족</div></div><span class="r-near">1개 부족</span></div>
+          <div class="rec-row"><div class="rec-thumb t4"><svg width="26" height="26" viewBox="0 0 38 38" fill="none"><rect x="10" y="19" width="18" height="8" rx="2" fill="#b8d0e4"/></svg></div><div class="rec-body"><div class="rec-title">된장찌개</div><div class="rec-meta">재료 7개 · 2개 부족</div></div><span class="r-miss">2개 부족</span></div>
+          <div class="rec-row"><div class="rec-thumb t5"><svg width="26" height="26" viewBox="0 0 38 38" fill="none"><ellipse cx="19" cy="21" rx="7" ry="5" fill="#ece8c0"/></svg></div><div class="rec-body"><div class="rec-title">계란찜</div><div class="rec-meta">재료 3개 · 바로 가능</div></div><span class="r-ok">가능</span></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-suggest">
+        <div class="f-pills">
+          <button class="f-pill on" onclick="setSugFilter(this,'all')">전체</button>
+          <button class="f-pill" onclick="setSugFilter(this,'ok')">바로 가능</button>
+          <button class="f-pill" onclick="setSugFilter(this,'near')">거의 가능</button>
+          <button class="f-pill" onclick="setSugFilter(this,'miss')">재료 부족</button>
+        </div>
+        <div id="sug-list"></div>
+      </div>
+
+      <div class="page" id="page-shop">
+        <div class="shop-add-row">
+          <input class="shop-add-input" id="shop-in" placeholder="재료 직접 추가..." onkeydown="if(event.key==='Enter')addManual()"/>
+          <button class="shop-add-go" onclick="addManual()">추가</button>
+        </div>
+        <div id="shop-content"></div>
+      </div>
+
+    </div>
+
+    <!-- 하단 네비 (모바일) -->
+    <div class="bot-nav">
+      <div class="bot-nav-inner">
+        <button class="bn-item on" id="bn-dash" onclick="goPage('dash')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.3" stroke-linecap="round"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5"/></svg>
+          <span class="bn-lbl">홈</span>
+        </button>
+        <button class="bn-item" id="bn-ing" onclick="goPage('ing')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.3" stroke-linecap="round"><rect x="2" y="1.5" width="14" height="15" rx="2"/><line x1="5" y1="6" x2="13" y2="6"/><line x1="5" y1="9" x2="13" y2="9"/><line x1="5" y1="12" x2="10" y2="12"/></svg>
+          <span class="bn-lbl">재료</span>
+        </button>
+        <button class="bn-item" id="bn-suggest" onclick="goPage('suggest')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.3" stroke-linecap="round"><polygon points="9,2 11.2,6.5 16,7.3 12.5,10.7 13.4,15.5 9,13.2 4.6,15.5 5.5,10.7 2,7.3 6.8,6.5"/></svg>
+          <span class="bn-lbl">추천</span>
+        </button>
+        <button class="bn-item" id="bn-shop" onclick="goPage('shop')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.3" stroke-linecap="round"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="11" y2="9"/><line x1="2" y1="13" x2="8" y2="13"/></svg>
+          <span class="bn-lbl">장보기</span>
+        </button>
+        <button class="bn-item" id="bn-rec" onclick="goPage('rec')">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke-width="1.3" stroke-linecap="round"><path d="M2 3h14v11a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 012 14V3z"/><line x1="5" y1="7.5" x2="13" y2="7.5"/><line x1="5" y1="10.5" x2="10" y2="10.5"/></svg>
+          <span class="bn-lbl">레시피</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAGES=['dash','ing','rec','suggest','shop'];
+const BN_PAGES=['dash','ing','suggest','shop','rec'];
+const RECIPES=[
+  {id:1,name:'계란볶음밥',thumb:'t1',status:'ok',have:['달걀','간장','참기름','밥'],miss:[],svg:'<ellipse cx="19" cy="27" rx="12" ry="4.5" fill="#c8b474"/><ellipse cx="19" cy="21" rx="10" ry="8" fill="#e8d48c"/>'},
+  {id:2,name:'두부김치찌개',thumb:'t2',status:'ok',have:['두부','김치','간장','참기름','달걀','물'],miss:[],svg:'<rect x="9" y="23" width="20" height="8" rx="3" fill="#8cb88c"/>'},
+  {id:3,name:'계란찜',thumb:'t5',status:'ok',have:['달걀','물','참기름','간장'],miss:[],svg:'<ellipse cx="19" cy="21" rx="7" ry="5" fill="#ece8c0"/>'},
+  {id:4,name:'새우볶음',thumb:'t3',status:'near',have:['냉동 새우','간장','참기름','마늘'],miss:['청양고추'],svg:'<ellipse cx="19" cy="25" rx="9" ry="5" fill="#e8b0b2"/>'},
+  {id:5,name:'된장찌개',thumb:'t4',status:'miss',have:['두부','달걀','간장'],miss:['된장','감자'],svg:'<rect x="10" y="19" width="18" height="8" rx="2" fill="#b8d0e4"/>'},
+];
+let shopItems=[
+  {id:1,name:'청양고추',from:'새우볶음',ck:false},
+  {id:2,name:'된장',from:'된장찌개',ck:false},
+  {id:3,name:'감자',from:'된장찌개',ck:false},
+  {id:4,name:'대파',from:'수동',ck:true},
+];
+let expandedId=null;
+let sugFilter='all';
+
+function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');}
+function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');}
+
+function goPage(id){
+  PAGES.forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el)el.classList.toggle('on',p===id);
+    const sb=document.getElementById('sb-'+p);
+    if(sb)sb.classList.toggle('on',p===id);
+  });
+  BN_PAGES.forEach(p=>{
+    const bn=document.getElementById('bn-'+p);
+    if(bn)bn.classList.toggle('on',p===id);
+  });
+  if(id==='suggest')renderSug();
+  if(id==='shop')renderShop();
+}
+
+function setPill(el){
+  el.closest('.f-pills').querySelectorAll('.f-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function setSugFilter(el,f){sugFilter=f;setPill(el);renderSug();}
+
+function isInShop(name){return shopItems.some(i=>i.name===name&&!i.ck);}
+
+function addToShop(name,from,btn){
+  if(isInShop(name))return;
+  shopItems.unshift({id:Date.now(),name,from,ck:false});
+  if(btn){btn.textContent='추가됨';btn.classList.add('added');btn.disabled=true;}
+  renderShop();
+}
+function addAllMiss(rid){
+  const r=RECIPES.find(x=>x.id===rid);
+  if(!r)return;
+  r.miss.forEach(m=>{if(!isInShop(m))shopItems.unshift({id:Date.now()+Math.random(),name:m,from:r.name,ck:false});});
+  renderSug();renderShop();
+}
+
+function renderSug(){
+  let list=RECIPES;
+  if(sugFilter==='ok')list=RECIPES.filter(r=>r.status==='ok');
+  else if(sugFilter==='near')list=RECIPES.filter(r=>r.status==='near');
+  else if(sugFilter==='miss')list=RECIPES.filter(r=>r.status==='miss');
+  const el=document.getElementById('sug-list');
+  el.innerHTML=list.map(r=>{
+    const exp=expandedId===r.id;
+    const badge=r.status==='ok'?'<span class="r-ok">바로 가능</span>':r.status==='near'?'<span class="r-near">'+r.miss.length+'개 부족</span>':'<span class="r-miss">'+r.miss.length+'개 부족</span>';
+    const allAdded=r.miss.length===0||r.miss.every(m=>isInShop(m));
+    let body='';
+    if(exp){
+      if(r.miss.length>0){
+        const missRows=r.miss.map(m=>{
+          const added=isInShop(m);
+          return '<div class="miss-item"><div class="miss-dot"></div><span style="flex:1">'+m+'</span><button class="add-shop-btn'+(added?' added':'')+'" onclick="addToShop(\''+m+'\',\''+r.name+'\',this)"'+(added?' disabled':'')+'>'+( added?'추가됨':'장보기 추가')+'</button></div>';
+        }).join('');
+        body='<div class="sug-body"><div class="miss-label">부족한 재료 ('+r.miss.length+'개)</div>'+missRows+'<button class="add-all-btn" onclick="addAllMiss('+r.id+')" style="margin-top:10px;">'+(allAdded?'✓ 모두 추가됨':'부족 재료 전체 장보기 추가')+'</button></div>';
+        body+='<div style="padding:8px 14px 12px;background:#fafaf9;border-top:0.5px solid var(--color-border-tertiary);"><div class="miss-label">있는 재료</div><div class="have-list">'+r.have.map(h=>'<span class="have-tag">'+h+'</span>').join('')+'</div></div>';
+      } else {
+        body='<div class="sug-body"><div style="font-size:12px;color:#3B6D11;margin-bottom:8px;">재료가 모두 있어요!</div><div class="have-list">'+r.have.map(h=>'<span class="have-tag">'+h+'</span>').join('')+'</div></div>';
+      }
+    }
+    const chevron=exp?'rotate(180deg)':'rotate(0deg)';
+    return '<div class="suggest-card'+(exp?' expanded':'')+'" onclick="toggleExp('+r.id+')">'
+      +'<div class="sug-header"><div class="rec-thumb '+r.thumb+'" style="position:relative;flex-shrink:0;width:46px;height:46px;border-radius:8px;display:flex;align-items:center;justify-content:center;"><svg width="26" height="26" viewBox="0 0 38 38" fill="none">'+r.svg+'</svg></div>'
+      +'<div class="rec-body"><div class="rec-title">'+r.name+'</div><div class="rec-meta">재료 '+(r.have.length+r.miss.length)+'개</div></div>'
+      +badge
+      +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;margin-left:6px;transform:'+chevron+';transition:transform 0.15s;"><line x1="2" y1="4" x2="6" y2="8" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="8" x2="10" y2="4" stroke="var(--color-text-tertiary)" stroke-width="1.3" stroke-linecap="round"/></svg>'
+      +'</div>'+body+'</div>';
+  }).join('');
+}
+
+function toggleExp(id){expandedId=expandedId===id?null:id;renderSug();}
+
+function renderShop(){
+  const unc=shopItems.filter(i=>!i.ck);
+  const ck=shopItems.filter(i=>i.ck);
+  const el=document.getElementById('shop-content');
+  if(!el)return;
+  let html='';
+  if(unc.length===0&&ck.length===0){
+    html='<div style="text-align:center;padding:40px 0;color:var(--color-text-tertiary);font-size:13px;">장보기 목록이 비어있어요</div>';
+  } else {
+    if(unc.length>0){
+      html+='<div class="shop-sec-t">구매 예정 ('+unc.length+')</div>';
+      html+=unc.map(i=>'<div class="shop-item" id="si'+i.id+'"><input type="checkbox" onchange="toggleItem('+i.id+',this)"><span class="shop-item-name">'+i.name+'</span><span class="shop-item-from">'+i.from+'</span></div>').join('');
+    }
+    if(ck.length>0){
+      html+='<div class="shop-sec-t">완료 ('+ck.length+')<span class="clr" onclick="clearDone()">모두 삭제</span></div>';
+      html+=ck.map(i=>'<div class="shop-item ck"><input type="checkbox" checked onchange="toggleItem('+i.id+',this)"><span class="shop-item-name">'+i.name+'</span><span class="shop-item-from">'+i.from+'</span></div>').join('');
+    }
+  }
+  el.innerHTML=html;
+}
+
+function toggleItem(id,cb){
+  const item=shopItems.find(i=>i.id===id);
+  if(item)item.ck=cb.checked;
+  renderShop();renderSug();
+}
+function clearDone(){shopItems=shopItems.filter(i=>!i.ck);renderShop();}
+function addManual(){
+  const inp=document.getElementById('shop-in');
+  const v=inp.value.trim();
+  if(!v)return;
+  shopItems.unshift({id:Date.now(),name:v,from:'수동',ck:false});
+  inp.value='';renderShop();
+}
+
+renderShop();
+</script>
