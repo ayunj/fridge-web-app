@@ -1,8 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
-import { requireEnv } from "@/lib/env";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-export const supabase = createClient(
-  requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const supabase: SupabaseClient | null =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
+
+export const isSupabaseEnabled = Boolean(supabase);
 
