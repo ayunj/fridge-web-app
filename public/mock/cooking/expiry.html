@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Mock (Cooking) - 유통기한 관리</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="app">
+        <div class="sidebar">
+          <div class="sb-logo">
+            <div class="sb-logo-text"><div class="sb-logo-dot"></div>나의 냉장고</div>
+          </div>
+
+          <div class="sb-section">재료</div>
+          <nav data-nav aria-label="사이드 메뉴">
+            <a class="sb-item" href="./dashboard.html">대시보드</a>
+            <a class="sb-item" href="./ingredients.html">전체 재료</a>
+            <a class="sb-item" href="./expiry.html">유통기한 관리 <span class="sb-badge">3</span></a>
+            <div class="sb-section">레시피</div>
+            <a class="sb-item" href="./my-recipes.html">내 레시피</a>
+            <a class="sb-item" href="./recommend.html">추천 레시피</a>
+            <div class="sb-section">기타</div>
+            <a class="sb-item" href="./shopping.html">장보기 목록</a>
+            <a class="sb-item" href="../index.html">↩ 목업 선택</a>
+          </nav>
+
+          <div class="sb-bottom">
+            <div class="sb-user">
+              <div class="sb-avatar">나</div>
+              <span class="sb-username">내 냉장고</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="topbar">
+            <div class="greeting"><span class="page-title">유통기한 관리</span></div>
+            <div class="search-box">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="4.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" />
+                <line x1="10.5" y1="10.5" x2="13.5" y2="13.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+              <input type="text" placeholder="이름으로 찾기..." />
+            </div>
+            <button class="add-btn" type="button">알림 설정</button>
+          </div>
+
+          <div class="content">
+            <div class="bottom-row">
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">임박(우선)</div>
+                  <div class="section-more">정렬 →</div>
+                </div>
+
+                <div class="exp-item">
+                  <div class="exp-icon red">🥛</div>
+                  <div>
+                    <div class="exp-name">우유</div>
+                    <div class="exp-date red">D-2 · 5월 2일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon amber">🥚</div>
+                  <div>
+                    <div class="exp-name">달걀</div>
+                    <div class="exp-date amber">D-5 · 5월 5일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon amber">🧀</div>
+                  <div>
+                    <div class="exp-name">체다치즈</div>
+                    <div class="exp-date amber">D-7 · 5월 7일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon" style="background:#EAF3DE;">🥬</div>
+                  <div>
+                    <div class="exp-name">두부</div>
+                    <div class="exp-date ok">D-12 · 5월 12일 까지</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">오늘 처리하기</div>
+                  <div class="section-more">레시피 추천 →</div>
+                </div>
+
+                <div class="shop-item"><input type="checkbox" /><span>우유로 만들기</span><span class="shop-from">프렌치토스트</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>달걀로 만들기</span><span class="shop-from">계란찜</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>치즈로 만들기</span><span class="shop-from">치즈토스트</span></div>
+                <div style="margin-top:12px;color:var(--color-text-tertiary);font-size:12px;line-height:1.6;">
+                  목업: 실제 앱에서는 여기서 “소진/폐기/연장” 같은 액션.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Mock (Cooking) - 대시보드</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <h2 class="sr-only">냉장고 재료 및 레시피 대시보드 — 요리앱 스타일 목업</h2>
+
+    <div class="wrap">
+      <div class="app">
+        <div class="sidebar">
+          <div class="sb-logo">
+            <div class="sb-logo-text"><div class="sb-logo-dot"></div>나의 냉장고</div>
+          </div>
+
+          <div class="sb-section">재료</div>
+          <nav data-nav aria-label="사이드 메뉴">
+            <a class="sb-item" href="./dashboard.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5" fill="white" />
+                <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5" fill="white" />
+                <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5" fill="white" />
+                <rect x="9" y="9" width="5.5" height="5.5" rx="1.5" fill="white" />
+              </svg>
+              대시보드
+            </a>
+            <a class="sb-item" href="./ingredients.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="1" width="12" height="14" rx="2" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="5" y1="5" x2="11" y2="5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="5" y1="8" x2="11" y2="8" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="5" y1="11" x2="9" y2="11" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+              </svg>
+              전체 재료
+            </a>
+            <a class="sb-item" href="./expiry.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="5.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="8" y1="5" x2="8" y2="8" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" />
+                <line x1="8" y1="8" x2="10.5" y2="10" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" />
+              </svg>
+              유통기한 관리
+              <span class="sb-badge">3</span>
+            </a>
+
+            <div class="sb-section">레시피</div>
+            <a class="sb-item" href="./my-recipes.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 3h12v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3z" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="5" y1="7" x2="11" y2="7" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+                <line x1="5" y1="10" x2="9" y2="10" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+              </svg>
+              내 레시피
+            </a>
+            <a class="sb-item" href="./recommend.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <polygon points="8,2 10,6 14,6.5 11,9.5 11.5,14 8,12 4.5,14 5,9.5 2,6.5 6,6" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" fill="none" />
+              </svg>
+              추천 레시피
+            </a>
+
+            <div class="sb-section">기타</div>
+            <a class="sb-item" href="./shopping.html">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5h10M3 8h7M3 11h5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round" />
+              </svg>
+              장보기 목록
+            </a>
+            <a class="sb-item" href="../index.html">
+              <span style="opacity:.7">↩</span>
+              목업 선택
+            </a>
+          </nav>
+
+          <div class="sb-bottom">
+            <div class="sb-user">
+              <div class="sb-avatar">나</div>
+              <span class="sb-username">내 냉장고</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="topbar">
+            <div class="greeting">좋은 저녁이에요, <span>오늘 뭐 해먹을까요?</span></div>
+            <div class="search-box">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="4.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" />
+                <line x1="10.5" y1="10.5" x2="13.5" y2="13.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+              <input type="text" placeholder="재료 검색..." />
+            </div>
+            <button class="add-btn" type="button">
+              <svg viewBox="0 0 14 14" fill="none">
+                <line x1="7" y1="2" x2="7" y2="12" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="2" y1="7" x2="12" y2="7" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              재료 추가
+            </button>
+          </div>
+
+          <div class="content">
+            <div class="hero-row">
+              <div class="hero-card">
+                <div class="hero-img fridge" style="font-size:34px;">🧊</div>
+                <div class="hero-body">
+                  <div class="hero-label">냉장</div>
+                  <div class="hero-count">18<span style="font-size:14px;font-weight:500;color:var(--color-text-secondary);margin-left:3px;">가지</span></div>
+                  <div class="hero-sub"><span class="warn-dot"></span>우유 D-2 임박</div>
+                </div>
+              </div>
+              <div class="hero-card">
+                <div class="hero-img freeze">
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <line x1="18" y1="3" x2="18" y2="33" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" />
+                    <line x1="3" y1="18" x2="33" y2="18" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" />
+                    <line x1="7.5" y1="7.5" x2="28.5" y2="28.5" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" />
+                    <line x1="28.5" y1="7.5" x2="7.5" y2="28.5" stroke="#378ADD" stroke-width="2.5" stroke-linecap="round" />
+                    <circle cx="18" cy="18" r="4" fill="#378ADD" />
+                  </svg>
+                </div>
+                <div class="hero-body">
+                  <div class="hero-label">냉동</div>
+                  <div class="hero-count">7<span style="font-size:14px;font-weight:500;color:var(--color-text-secondary);margin-left:3px;">가지</span></div>
+                  <div class="hero-sub" style="color:var(--color-text-tertiary);">새우, 만두, 고기 외</div>
+                </div>
+              </div>
+              <div class="hero-card">
+                <div class="hero-img dry">
+                  <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+                    <rect x="6" y="14" width="22" height="16" rx="3" stroke="#BA7517" stroke-width="2" />
+                    <path d="M11 14v-3a6 6 0 0 1 12 0v3" stroke="#BA7517" stroke-width="2" />
+                    <circle cx="17" cy="22" r="2.5" fill="#BA7517" />
+                  </svg>
+                </div>
+                <div class="hero-body">
+                  <div class="hero-label">상온</div>
+                  <div class="hero-count">12<span style="font-size:14px;font-weight:500;color:var(--color-text-secondary);margin-left:3px;">가지</span></div>
+                  <div class="hero-sub" style="color:var(--color-text-tertiary);">라면, 참기름 외</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-header" style="margin-bottom:12px;">
+                <div class="section-title">오늘 만들 수 있는 레시피</div>
+                <a class="section-more" href="./recommend.html">전체 보기 →</a>
+              </div>
+              <div class="recipe-grid">
+                <div class="recipe-card">
+                  <div class="recipe-thumb r1">🍳</div>
+                  <div class="recipe-info">
+                    <div class="recipe-name">계란볶음밥</div>
+                    <div class="recipe-status"><span class="pill-ok">바로 가능</span></div>
+                  </div>
+                </div>
+                <div class="recipe-card">
+                  <div class="recipe-thumb r2">🍲</div>
+                  <div class="recipe-info">
+                    <div class="recipe-name">두부김치찌개</div>
+                    <div class="recipe-status"><span class="pill-ok">바로 가능</span></div>
+                  </div>
+                </div>
+                <div class="recipe-card">
+                  <div class="recipe-thumb r3" style="position:relative;">🦐
+                    <div class="yt-badge"><svg width="10" height="8" viewBox="0 0 10 8"><polygon points="3,1 9,4 3,7" fill="white"/></svg></div>
+                  </div>
+                  <div class="recipe-info">
+                    <div class="recipe-name">새우볶음</div>
+                    <div class="recipe-status"><span class="pill-near">1개 부족</span><span class="recipe-missing">청양고추</span></div>
+                  </div>
+                </div>
+                <div class="recipe-card">
+                  <div class="recipe-thumb r4">🍜</div>
+                  <div class="recipe-info">
+                    <div class="recipe-name">된장찌개</div>
+                    <div class="recipe-status"><span class="pill-miss">2개 부족</span></div>
+                  </div>
+                </div>
+                <div class="recipe-card">
+                  <div class="recipe-thumb r5" style="position:relative;">🥚
+                    <div class="yt-badge"><svg width="10" height="8" viewBox="0 0 10 8"><polygon points="3,1 9,4 3,7" fill="white"/></svg></div>
+                  </div>
+                  <div class="recipe-info">
+                    <div class="recipe-name">계란찜</div>
+                    <div class="recipe-status"><span class="pill-ok">바로 가능</span></div>
+                  </div>
+                </div>
+                <a class="recipe-card" href="./my-recipes.html" style="border:1.5px dashed var(--color-border-secondary);display:flex;align-items:center;justify-content:center;">
+                  <div style="text-align:center;padding:16px;">
+                    <div style="font-size:22px;margin-bottom:6px;color:var(--color-text-tertiary);">＋</div>
+                    <div style="font-size:12px;color:var(--color-text-tertiary);">레시피 추가</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div class="bottom-row">
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">유통기한 임박</div>
+                  <a class="section-more" href="./expiry.html">전체 →</a>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon red">🥛</div>
+                  <div>
+                    <div class="exp-name">우유</div>
+                    <div class="exp-date red">D-2 · 5월 2일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon amber">🥚</div>
+                  <div>
+                    <div class="exp-name">달걀</div>
+                    <div class="exp-date amber">D-5 · 5월 5일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon amber">🧀</div>
+                  <div>
+                    <div class="exp-name">체다치즈</div>
+                    <div class="exp-date amber">D-7 · 5월 7일 까지</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon" style="background:#EAF3DE;">🥬</div>
+                  <div>
+                    <div class="exp-name">두부</div>
+                    <div class="exp-date ok">D-12 · 5월 12일 까지</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">장보기 목록</div>
+                  <a class="section-more" href="./shopping.html">편집 →</a>
+                </div>
+                <div class="shop-item"><input type="checkbox" /><span>청양고추</span><span class="shop-from">새우볶음</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>된장</span><span class="shop-from">된장찌개</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>감자</span><span class="shop-from">된장찌개</span></div>
+                <div class="shop-item"><input type="checkbox" checked /><span class="shop-done">대파</span><span class="shop-from" style="text-decoration:none;">완료</span></div>
+                <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:12px;color:#0F6E56;cursor:pointer;">+ 레시피에서 자동 추가 →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+
