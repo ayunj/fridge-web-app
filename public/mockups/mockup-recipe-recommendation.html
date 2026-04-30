@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fridge Mockup 02 - 레시피 추천</title>
+    <style>
+      :root {
+        --bg: #070a13;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel-2: rgba(255, 255, 255, 0.09);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --subtle: rgba(255, 255, 255, 0.55);
+        --border: rgba(255, 255, 255, 0.12);
+        --shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
+        --brand: #7c5cff;
+        --brand-2: #22d3ee;
+        --ok: #34d399;
+        --warn: #fbbf24;
+        --danger: #fb7185;
+        --radius: 18px;
+        --radius-sm: 14px;
+        --focus: 0 0 0 3px rgba(34, 211, 238, 0.28);
+        --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple SD Gothic Neo",
+          "Noto Sans KR", "Malgun Gothic", "맑은 고딕", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--text);
+        background: radial-gradient(1100px 600px at 20% 0%, rgba(34, 211, 238, 0.22), transparent 60%),
+          radial-gradient(1000px 700px at 80% 5%, rgba(124, 92, 255, 0.24), transparent 60%),
+          radial-gradient(1200px 900px at 50% 100%, rgba(251, 191, 36, 0.1), transparent 55%), var(--bg);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px 44px;
+      }
+
+      @media (max-width: 620px) {
+        .page {
+          padding: 16px 14px 34px;
+        }
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .headline h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+      }
+      .headline p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--brand-2);
+        display: inline-block;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 650;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        user-select: none;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.09);
+      }
+      .btn:focus-visible {
+        outline: none;
+        box-shadow: var(--focus);
+      }
+      .btn.primary {
+        border-color: rgba(34, 211, 238, 0.45);
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(124, 92, 255, 0.18));
+      }
+      .btn.primary:hover {
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.36), rgba(124, 92, 255, 0.22));
+      }
+
+      .layout {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .panel .hd {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid var(--border);
+      }
+      .panel .hd h2 {
+        margin: 0;
+        font-size: 14px;
+      }
+      .panel .hd small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .panel .bd {
+        padding: 14px 16px 16px;
+      }
+
+      .search {
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .search input {
+        width: 100%;
+        padding: 12px 12px 12px 38px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        outline: none;
+      }
+      .search input:focus {
+        border-color: rgba(34, 211, 238, 0.42);
+        box-shadow: var(--focus);
+      }
+      .search svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.75;
+      }
+
+      .tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .tag {
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 12px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .tag[aria-pressed="true"] {
+        color: var(--text);
+        border-color: rgba(34, 211, 238, 0.42);
+        background: rgba(34, 211, 238, 0.14);
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .ing {
+        display: grid;
+        gap: 10px;
+      }
+
+      .ing-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .ing-item strong {
+        font-size: 13px;
+      }
+      .ing-item span {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 6px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .badge.warn {
+        border-color: rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.12);
+      }
+      .badge.danger {
+        border-color: rgba(251, 113, 133, 0.35);
+        background: rgba(251, 113, 133, 0.12);
+      }
+      .badge.ok {
+        border-color: rgba(52, 211, 153, 0.35);
+        background: rgba(52, 211, 153, 0.12);
+      }
+
+      .recipe-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 680px) {
+        .recipe-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .recipe {
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 12px;
+        padding: 12px;
+        cursor: pointer;
+      }
+      .recipe:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .thumb {
+        height: 72px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(124, 92, 255, 0.35), rgba(34, 211, 238, 0.22));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .recipe h3 {
+        margin: 0;
+        font-size: 13px;
+      }
+      .recipe p {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .meta .badge {
+        padding: 5px 8px;
+      }
+
+      .detail {
+        display: grid;
+        gap: 14px;
+      }
+
+      .hero {
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(124, 92, 255, 0.12));
+        padding: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .hero h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 860px) {
+        .two {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .box {
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 12px 12px;
+      }
+
+      .box h4 {
+        margin: 0 0 10px;
+        font-size: 13px;
+      }
+
+      .steps {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .chk {
+        display: grid;
+        gap: 8px;
+      }
+      .chk label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .chk input {
+        width: 16px;
+        height: 16px;
+      }
+
+      .footer-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      dialog {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: rgba(8, 10, 18, 0.92);
+        color: var(--text);
+        width: min(680px, calc(100vw - 24px));
+        box-shadow: var(--shadow);
+        padding: 0;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-hd {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .modal-hd h3 {
+        margin: 0;
+        font-size: 14px;
+      }
+      .modal-bd {
+        padding: 14px 16px 16px;
+        display: grid;
+        gap: 10px;
+      }
+      .modal-ft {
+        padding: 12px 16px 16px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        width: min(420px, calc(100vw - 24px));
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(10, 12, 24, 0.8);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .toast.show {
+        display: block;
+      }
+      .toast .t {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .toast .d {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="top">
+        <div class="headline">
+          <h1>레시피 추천</h1>
+          <p>냉장고 재고 기반으로 “소진 우선” 레시피를 추천해요. (목업)</p>
+        </div>
+        <div class="actions">
+          <span class="pill"><span class="dot" aria-hidden="true"></span> 오늘 만료 2개 / 임박 5개</span>
+          <button class="btn" id="btnPlan">주간 식단으로 추가</button>
+          <button class="btn primary" id="btnAuto">자동 추천 새로고침</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <section class="panel" aria-labelledby="leftTitle">
+          <header class="hd">
+            <div>
+              <h2 id="leftTitle">재고 & 필터</h2>
+              <small>왼쪽에서 선택하면 오른쪽이 바뀌어요</small>
+            </div>
+            <span class="badge warn">소진 우선</span>
+          </header>
+          <div class="bd">
+            <div class="search" role="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M10.5 18.5a8 8 0 1 1 5.6-2.3l4 4a1 1 0 0 1-1.4 1.4l-4-4a8 8 0 0 1-4.2 1.2Z"
+                  stroke="rgba(255,255,255,.75)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input id="q" placeholder="재료 검색 (예: 계란, 두부)" autocomplete="off" />
+            </div>
+
+            <div class="tags" aria-label="추천 필터">
+              <button class="tag" data-tag="all" aria-pressed="true">전체</button>
+              <button class="tag" data-tag="quick" aria-pressed="false">15분</button>
+              <button class="tag" data-tag="lowcarb" aria-pressed="false">저탄수</button>
+              <button class="tag" data-tag="airfryer" aria-pressed="false">에어프라이어</button>
+            </div>
+
+            <div class="ing" id="ingList" aria-label="재고 목록"></div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="rightTitle">
+          <header class="hd">
+            <div>
+              <h2 id="rightTitle">추천 레시피</h2>
+              <small id="subtitle">선택한 재료를 최대한 소진</small>
+            </div>
+            <span class="badge danger" id="wasteBadge">폐기 위험 ↓</span>
+          </header>
+          <div class="bd">
+            <div class="recipe-grid" id="recipeGrid" aria-label="레시피 카드 목록"></div>
+
+            <div class="detail" style="margin-top: 14px">
+              <div class="hero" id="hero">
+                <h2 id="heroTitle">계란 두부 덮밥</h2>
+                <p id="heroDesc">
+                  “오늘 만료” 식재료(계란/두부)를 먼저 소진하는 레시피. 간단한 소스(간장+물+설탕)로 10~15분 완성.
+                </p>
+                <div class="meta" id="heroMeta"></div>
+              </div>
+
+              <div class="two">
+                <div class="box">
+                  <h4>준비 재료 체크</h4>
+                  <div class="chk" id="checklist"></div>
+                </div>
+
+                <div class="box">
+                  <h4>조리 단계</h4>
+                  <ol class="steps" id="steps"></ol>
+                </div>
+              </div>
+
+              <div class="footer-actions">
+                <button class="btn" id="btnShopping">부족 재료 장보기로</button>
+                <button class="btn primary" id="btnCook">지금 만들기 (타이머)</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <dialog id="dlgPlan" aria-labelledby="dlgTitle">
+      <div class="modal-hd">
+        <h3 id="dlgTitle">주간 식단에 추가</h3>
+        <button class="btn" id="btnClosePlan" aria-label="닫기">닫기</button>
+      </div>
+      <div class="modal-bd">
+        <div style="display: grid; gap: 10px">
+          <div class="box" style="margin: 0">
+            <h4 style="margin-bottom: 8px">선택 레시피</h4>
+            <div id="planRecipe" style="color: var(--muted); font-size: 12px"></div>
+          </div>
+          <div class="box" style="margin: 0">
+            <h4 style="margin-bottom: 8px">일정</h4>
+            <div style="display: grid; gap: 8px">
+              <label style="display: grid; gap: 6px; font-size: 12px; color: var(--muted)">
+                요일
+                <select id="weekday" style="padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,.06); color: var(--text); outline: none;">
+                  <option>월</option>
+                  <option>화</option>
+                  <option>수</option>
+                  <option>목</option>
+                  <option>금</option>
+                  <option>토</option>
+                  <option>일</option>
+                </select>
+              </label>
+              <label style="display: grid; gap: 6px; font-size: 12px; color: var(--muted)">
+                시간대
+                <select id="slot" style="padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,.06); color: var(--text); outline: none;">
+                  <option>아침</option>
+                  <option>점심</option>
+                  <option>저녁</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button class="btn" id="btnAddPlan">추가</button>
+        <button class="btn primary" id="btnAddPlanAndList">추가 + 장보기 생성</button>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <div class="t">알림</div>
+      <div class="d">목업 상호작용입니다.</div>
+    </div>
+
+    <script>
+      const state = {
+        q: "",
+        tag: "all",
+        selectedIng: new Set(["계란", "두부", "우유"]),
+        selectedRecipeId: "r1",
+      };
+
+      const inventory = [
+        { name: "계란", note: "오늘 만료", badge: "danger" },
+        { name: "두부", note: "오늘 만료", badge: "danger" },
+        { name: "우유", note: "2일 남음", badge: "warn" },
+        { name: "대파", note: "4일 남음", badge: "ok" },
+        { name: "냉동만두", note: "냉동", badge: "" },
+        { name: "김치", note: "10일 남음", badge: "ok" },
+      ];
+
+      const recipes = [
+        {
+          id: "r1",
+          title: "계란 두부 덮밥",
+          desc: "소진 우선: 계란/두부를 한 번에 해결하는 15분 레시피",
+          tags: ["quick"],
+          meta: ["15분", "재료 6개", "난이도 하"],
+          uses: ["계란", "두부", "대파"],
+          needs: ["밥", "간장", "설탕", "참기름"],
+          steps: ["소스(간장+물+설탕) 섞기", "두부 부수어 볶기", "계란 풀어 스크램블", "소스 넣고 졸이기", "밥 위에 올리고 대파/참기름"],
+        },
+        {
+          id: "r2",
+          title: "두부 김치볶음",
+          desc: "두부+김치 조합, 밥도둑. 냉장고 정리용",
+          tags: [],
+          meta: ["20분", "난이도 하"],
+          uses: ["두부", "김치", "대파"],
+          needs: ["고춧가루", "설탕"],
+          steps: ["김치 볶기", "두부 넣고 부드럽게 섞기", "간 맞추기", "대파로 마무리"],
+        },
+        {
+          id: "r3",
+          title: "우유 계란찜",
+          desc: "우유 남을 때 부드럽게. 전자레인지 버전(목업)",
+          tags: ["quick", "lowcarb"],
+          meta: ["10분", "난이도 하"],
+          uses: ["우유", "계란"],
+          needs: ["소금", "후추"],
+          steps: ["계란 풀기", "우유 섞기", "간 맞추기", "전자레인지 3~4분(중간 확인)"],
+        },
+        {
+          id: "r4",
+          title: "만두 에어프라이",
+          desc: "냉동만두를 바삭하게. 급할 때",
+          tags: ["airfryer"],
+          meta: ["12분", "난이도 하"],
+          uses: ["냉동만두"],
+          needs: ["식용유 스프레이(선택)"],
+          steps: ["예열", "만두 배치", "180도 10~12분", "중간 뒤집기"],
+        },
+      ];
+
+      const el = (id) => document.getElementById(id);
+      const toast = el("toast");
+      let toastTimer = null;
+      const showToast = (title, desc) => {
+        toast.querySelector(".t").textContent = title;
+        toast.querySelector(".d").textContent = desc;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      };
+
+      const escapeHtml = (s) =>
+        String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+
+      const matchesInv = (i) => !state.q || i.name.toLowerCase().includes(state.q.toLowerCase());
+      const matchesTag = (r) => state.tag === "all" || r.tags.includes(state.tag);
+
+      const scoreRecipe = (r) => {
+        const useCount = r.uses.filter((x) => state.selectedIng.has(x)).length;
+        const dangerBoost = r.uses.includes("계란") || r.uses.includes("두부") ? 1 : 0;
+        const tagBoost = state.tag !== "all" && r.tags.includes(state.tag) ? 1 : 0;
+        return useCount * 2 + dangerBoost + tagBoost;
+      };
+
+      const renderInventory = () => {
+        const nodes = inventory
+          .filter(matchesInv)
+          .map((i) => {
+            const checked = state.selectedIng.has(i.name);
+            const badge = i.badge ? `<span class="badge ${i.badge}">${escapeHtml(i.note)}</span>` : `<span class="badge">${escapeHtml(i.note)}</span>`;
+            return `
+              <div class="ing-item">
+                <div>
+                  <strong>${escapeHtml(i.name)}</strong>
+                  <span>${badge}</span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px;">
+                  <label style="display:flex; align-items:center; gap:8px; color: var(--muted); font-size:12px;">
+                    <input type="checkbox" data-ing="${escapeHtml(i.name)}" ${checked ? "checked" : ""}/>
+                    선택
+                  </label>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        el("ingList").innerHTML = nodes || `<div style="color: var(--muted); font-size: 12px">검색 결과가 없어요.</div>`;
+      };
+
+      const renderRecipes = () => {
+        const ordered = [...recipes].filter(matchesTag).sort((a, b) => scoreRecipe(b) - scoreRecipe(a));
+        const cards = ordered
+          .map((r) => {
+            const uses = r.uses.filter((x) => state.selectedIng.has(x));
+            const usesText = uses.length ? `소진: ${uses.join(", ")}` : `선택 재료 매칭 없음`;
+            const active = r.id === state.selectedRecipeId;
+            return `
+              <div class="recipe" role="button" tabindex="0" data-recipe="${escapeHtml(r.id)}" aria-pressed="${active}">
+                <div class="thumb" aria-hidden="true"></div>
+                <div>
+                  <h3>${escapeHtml(r.title)}</h3>
+                  <p>${escapeHtml(r.desc)}</p>
+                  <div class="meta">
+                    <span class="badge">${escapeHtml(usesText)}</span>
+                    ${r.tags.includes("quick") ? `<span class="badge ok">빠름</span>` : ""}
+                    ${r.tags.includes("lowcarb") ? `<span class="badge">저탄수</span>` : ""}
+                    ${r.tags.includes("airfryer") ? `<span class="badge">에어프라이어</span>` : ""}
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        el("recipeGrid").innerHTML = cards;
+
+        if (!ordered.find((r) => r.id === state.selectedRecipeId) && ordered[0]) {
+          state.selectedRecipeId = ordered[0].id;
+        }
+        renderDetail();
+      };
+
+      const renderDetail = () => {
+        const r = recipes.find((x) => x.id === state.selectedRecipeId) || recipes[0];
+        if (!r) return;
+        el("heroTitle").textContent = r.title;
+        el("heroDesc").textContent = r.desc;
+        el("heroMeta").innerHTML = r.meta.map((m) => `<span class="badge">${escapeHtml(m)}</span>`).join("");
+
+        const missing = r.needs.filter((x) => !state.selectedIng.has(x));
+        el("subtitle").textContent = `선택 재료 ${state.selectedIng.size}개 기반 추천`;
+        el("wasteBadge").textContent = missing.length ? `부족 재료 ${missing.length}개` : "부족 재료 없음";
+        el("wasteBadge").className = `badge ${missing.length ? "warn" : "ok"}`;
+
+        el("checklist").innerHTML = [
+          ...r.uses.map((x) => ({ name: x, ok: state.selectedIng.has(x), type: "use" })),
+          ...r.needs.map((x) => ({ name: x, ok: state.selectedIng.has(x), type: "need" })),
+        ]
+          .map(({ name, ok, type }) => {
+            const badge = ok ? `<span class="badge ok">있음</span>` : `<span class="badge warn">${type === "need" ? "부족" : "선택안됨"}</span>`;
+            return `
+              <label>
+                <input type="checkbox" ${ok ? "checked" : ""} data-toggle="${escapeHtml(name)}" />
+                <span style="display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;">
+                  <span>${escapeHtml(name)}</span>
+                  ${badge}
+                </span>
+              </label>
+            `;
+          })
+          .join("");
+
+        el("steps").innerHTML = r.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("");
+        el("planRecipe").textContent = r.title;
+      };
+
+      // Events
+      el("q").addEventListener("input", (e) => {
+        state.q = e.target.value.trim();
+        renderInventory();
+      });
+
+      document.querySelectorAll(".tag").forEach((b) => {
+        b.addEventListener("click", () => {
+          document.querySelectorAll(".tag").forEach((x) => x.setAttribute("aria-pressed", "false"));
+          b.setAttribute("aria-pressed", "true");
+          state.tag = b.dataset.tag;
+          renderRecipes();
+        });
+      });
+
+      el("ingList").addEventListener("change", (e) => {
+        const cb = e.target.closest('input[type="checkbox"][data-ing]');
+        if (!cb) return;
+        const name = cb.dataset.ing;
+        if (cb.checked) state.selectedIng.add(name);
+        else state.selectedIng.delete(name);
+        renderRecipes();
+      });
+
+      el("recipeGrid").addEventListener("click", (e) => {
+        const card = e.target.closest(".recipe[data-recipe]");
+        if (!card) return;
+        state.selectedRecipeId = card.dataset.recipe;
+        renderRecipes();
+      });
+
+      el("recipeGrid").addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest(".recipe[data-recipe]");
+        if (!card) return;
+        e.preventDefault();
+        state.selectedRecipeId = card.dataset.recipe;
+        renderRecipes();
+      });
+
+      el("checklist").addEventListener("change", (e) => {
+        const cb = e.target.closest('input[type="checkbox"][data-toggle]');
+        if (!cb) return;
+        const name = cb.dataset.toggle;
+        if (cb.checked) state.selectedIng.add(name);
+        else state.selectedIng.delete(name);
+        renderInventory();
+        renderRecipes();
+      });
+
+      const dlg = el("dlgPlan");
+      el("btnPlan").addEventListener("click", () => dlg.showModal());
+      el("btnClosePlan").addEventListener("click", () => dlg.close());
+      el("btnAddPlan").addEventListener("click", () => {
+        dlg.close();
+        showToast("식단에 추가했어요.", `${el("weekday").value} ${el("slot").value} · ${el("planRecipe").textContent} (목업)`);
+      });
+      el("btnAddPlanAndList").addEventListener("click", () => {
+        dlg.close();
+        showToast("식단 + 장보기 생성", `부족 재료를 장보기 리스트로 보냈어요. (목업)`);
+      });
+
+      el("btnShopping").addEventListener("click", () => {
+        showToast("장보기로 이동", "부족 재료를 장보기 리스트에 추가하는 흐름 (목업)");
+      });
+
+      el("btnCook").addEventListener("click", () => {
+        showToast("타이머 시작", "10분 타이머를 시작했다는 가정 (목업)");
+      });
+
+      el("btnAuto").addEventListener("click", () => {
+        const tags = ["all", "quick", "lowcarb", "airfryer"];
+        state.tag = tags[(tags.indexOf(state.tag) + 1) % tags.length];
+        document.querySelectorAll(".tag").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.tag === state.tag)));
+        showToast("추천을 새로고쳤어요.", `필터: ${state.tag === "all" ? "전체" : state.tag} (목업)`);
+        renderRecipes();
+      });
+
+      renderInventory();
+      renderRecipes();
+    </script>
+  </body>
+</html>

@@ -1,4 +1,11 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## fridge-web-app
+
+1인용 냉장고/레시피 웹앱(폰/PC에서 같이 쓰는 걸 목표).
+
+### Supabase (나중에 연결)
+
+- `.env.example`를 참고해서 `.env.local`을 만들고 키를 넣으면 됩니다.
+- Supabase 클라이언트는 `src/lib/supabase/client.ts`에 준비해두었습니다.
 
 ## Getting Started
 
