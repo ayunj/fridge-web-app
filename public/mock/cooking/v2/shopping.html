@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Mock (Cooking v2) - 장보기 목록</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="app">
+        <div class="sidebar">
+          <div class="sb-logo">
+            <div class="sb-logo-text"><div class="sb-logo-dot"></div>나의 냉장고</div>
+          </div>
+          <div class="sb-section">재료</div>
+          <nav data-nav aria-label="사이드 메뉴">
+            <a class="sb-item" href="./dashboard.html">대시보드</a>
+            <a class="sb-item" href="./ingredients.html">전체 재료</a>
+            <a class="sb-item" href="./expiry.html">유통기한 관리 <span class="sb-badge">3</span></a>
+            <div class="sb-section">레시피</div>
+            <a class="sb-item" href="./my-recipes.html">내 레시피</a>
+            <a class="sb-item" href="./recommend.html">추천 레시피</a>
+            <div class="sb-section">기타</div>
+            <a class="sb-item" href="./shopping.html">장보기 목록</a>
+            <a class="sb-item" href="../index.html">↩ 목업 선택</a>
+          </nav>
+          <div class="sb-bottom">
+            <div class="sb-user">
+              <div class="sb-avatar">나</div>
+              <span class="sb-username">내 냉장고</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="main">
+          <div class="topbar">
+            <div class="greeting"><span class="page-title">장보기 목록</span></div>
+            <div class="search-box">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="4.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" />
+                <line x1="10.5" y1="10.5" x2="13.5" y2="13.5" stroke="var(--color-text-tertiary)" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+              <input type="text" placeholder="장보기 검색..." />
+            </div>
+            <button class="add-btn" type="button">항목 추가</button>
+          </div>
+
+          <div class="content">
+            <div class="bottom-row">
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">체크리스트</div>
+                  <div class="section-more">정렬 →</div>
+                </div>
+                <div class="shop-item"><input type="checkbox" /><span>청양고추</span><span class="shop-from">새우볶음</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>된장</span><span class="shop-from">된장찌개</span></div>
+                <div class="shop-item"><input type="checkbox" /><span>감자</span><span class="shop-from">된장찌개</span></div>
+                <div class="shop-item"><input type="checkbox" checked /><span class="shop-done">대파</span><span class="shop-from" style="text-decoration:none;">완료</span></div>
+                <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);cursor:pointer;">
+                  + 레시피에서 자동 추가 →
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-header" style="margin-bottom:12px;">
+                  <div class="section-title">추천 레시피 기반</div>
+                  <a class="section-more" href="./recommend.html">보러가기 →</a>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon">🍲</div>
+                  <div>
+                    <div class="exp-name">두부김치찌개</div>
+                    <div class="exp-date">바로 가능</div>
+                  </div>
+                </div>
+                <div class="exp-item">
+                  <div class="exp-icon">🦐</div>
+                  <div>
+                    <div class="exp-name">새우볶음</div>
+                    <div class="exp-date">1개 부족</div>
+                  </div>
+                </div>
+                <div style="margin-top:12px;color:var(--color-text-tertiary);font-size:12px;line-height:1.6;">
+                  목업: 레시피 선택 시 부족 재료만 자동으로 여기에 추가.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

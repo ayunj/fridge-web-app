@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cooking v2 - 로그인 정보</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="app">
+        <header class="topbar">
+          <div class="brand">
+            <span class="dot" aria-hidden="true"></span>
+            <span>로그인 정보</span>
+          </div>
+          <div class="search" aria-label="검색">
+            <span aria-hidden="true">⚙</span>
+            <input type="text" placeholder="설정 검색(목업)..." />
+          </div>
+          <button class="iconBtn" type="button" data-drawer-open aria-expanded="false">메뉴</button>
+        </header>
+
+        <main class="content">
+          <section class="grid2" aria-label="계정">
+            <article class="card list">
+              <div class="sectionTitle">로그인</div>
+              <div class="row" style="margin-top:10px;"><span class="pill">Email</span><strong>user@example.com</strong></div>
+              <div class="row"><span class="pill">Password</span><strong>••••••••</strong></div>
+              <div class="muted" style="margin-top:10px;">목업: 실제 앱에서는 Supabase Auth</div>
+            </article>
+            <article class="card list">
+              <div class="sectionTitle">설정</div>
+              <div class="row" style="margin-top:10px;"><span class="pill ok">동기화</span><strong>클라우드</strong></div>
+              <div class="row"><span class="pill">테마</span><strong>귀염(가정)</strong></div>
+              <div class="row"><span class="pill bad">세션</span><strong>로그아웃</strong></div>
+              <div class="muted" style="margin-top:10px;">중요 메뉴는 하단 네비로 고정</div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="drawerOverlay" data-drawer-overlay data-open="false">
+      <aside class="drawer" data-drawer data-open="false" role="dialog" aria-label="메뉴">
+        <div class="drawerHead">
+          <div class="drawerTitle">메뉴</div>
+          <button class="iconBtn" type="button" data-drawer-close>닫기</button>
+        </div>
+        <nav class="drawerNav" data-nav aria-label="전체 메뉴">
+          <a href="./dashboard.html"><span>대시보드</span><span>→</span></a>
+          <a href="./ingredients.html"><span>전체 재료</span><span>→</span></a>
+          <a href="./my-recipes.html"><span>내 레시피</span><span>→</span></a>
+          <a href="./account.html"><span>로그인 정보</span><span>→</span></a>
+          <a href="../v1/dashboard.html"><span>Cooking v1</span><span>→</span></a>
+          <a href="../../index.html"><span>목업 선택</span><span>→</span></a>
+        </nav>
+      </aside>
+    </div>
+
+    <nav class="bottomNav" data-nav aria-label="하단 네비">
+      <a href="./dashboard.html">대시보드</a>
+      <a href="./ingredients.html">전체재료</a>
+      <a href="./my-recipes.html">내레시피</a>
+      <a href="./account.html">로그인</a>
+    </nav>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

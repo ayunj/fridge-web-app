@@ -12,8 +12,8 @@
         --border: rgba(255, 255, 255, 0.12);
         --text: rgba(255, 255, 255, 0.92);
         --muted: rgba(255, 255, 255, 0.62);
-        --brand: #ff6bb0;
-        --brand2: #7be1ff;
+        --brand: #d3d1c7;
+        --brand2: #a8a6a0;
         --r-xl: 22px;
         --r-lg: 18px;
         --r-md: 14px;
@@ -30,9 +30,9 @@
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
         color: var(--text);
         background:
-          radial-gradient(1200px 520px at 12% -10%, rgba(255, 107, 176, 0.25), transparent 62%),
-          radial-gradient(980px 520px at 92% 8%, rgba(123, 225, 255, 0.22), transparent 60%),
-          radial-gradient(900px 560px at 64% 112%, rgba(124, 92, 255, 0.18), transparent 58%),
+          radial-gradient(1200px 520px at 12% -10%, rgba(211, 209, 199, 0.16), transparent 62%),
+          radial-gradient(980px 520px at 92% 8%, rgba(168, 166, 160, 0.14), transparent 60%),
+          radial-gradient(900px 560px at 64% 112%, rgba(255, 255, 255, 0.08), transparent 58%),
           linear-gradient(180deg, #0b1020, #081222);
       }
       a {
@@ -69,7 +69,7 @@
         height: 12px;
         border-radius: 999px;
         background: linear-gradient(135deg, var(--brand), var(--brand2));
-        box-shadow: 0 16px 40px rgba(255, 107, 176, 0.22);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
       }
       .card {
         border: 1px solid var(--border);
@@ -129,8 +129,8 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        border: 1px solid rgba(255, 107, 176, 0.28);
-        background: linear-gradient(135deg, rgba(255, 107, 176, 0.95), rgba(124, 92, 255, 0.95));
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
         color: #fff;
         font-weight: 900;
         letter-spacing: -0.02em;
@@ -194,7 +194,10 @@
             <span class="pill">상단 검색/추가</span>
             <span class="pill">카드/칩/그리드</span>
           </div>
-          <a class="go" href="./cooking/dashboard.html">Cooking 목업 시작</a>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="go" style="flex:1; min-width:220px;" href="./cooking/v1/dashboard.html">Cooking v1(레퍼런스)</a>
+            <a class="go" style="flex:1; min-width:220px;" href="./cooking/v2/dashboard.html">Cooking v2(귀염/하단네비)</a>
+          </div>
         </article>
       </section>
 
