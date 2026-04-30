@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v1 - 레시피</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v1</span>
+        </div>
+        <p class="sub">대시보드 중심 + 좌측 메뉴로 이동</p>
+
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html"><span class="icon" aria-hidden="true">🏠</span>대시보드</a>
+          <a href="./inventory.html"><span class="icon" aria-hidden="true">🧺</span>인벤토리</a>
+          <a href="./recipes.html"><span class="icon" aria-hidden="true">📌</span>레시피</a>
+          <a href="./shopping.html"><span class="icon" aria-hidden="true">🛒</span>장보기</a>
+          <a href="./account.html"><span class="icon" aria-hidden="true">🔐</span>계정</a>
+        </nav>
+
+        <div class="sidebarFooter">
+          <a class="pill" href="../index.html">버전 선택으로</a>
+          <div style="margin-top: 8px">레시피는 링크+메모로 가볍게</div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="crumb">
+            <span class="pill">v1</span>
+            <span class="pill">레시피</span>
+            <span class="pill ok">가능 7</span>
+            <span class="pill warn">거의 가능 5</span>
+          </div>
+          <div class="crumb">
+            <a class="pill" href="./shopping.html">부족 재료 → 장보기</a>
+          </div>
+        </header>
+
+        <section class="grid" aria-label="레시피">
+          <article class="card span7">
+            <h1>레시피 리스트</h1>
+            <div class="kpi">
+              <div class="row"><span class="pill ok">가능</span><strong>김치볶음밥</strong></div>
+              <div class="row"><span class="pill warn">부족 2</span><strong>크림파스타</strong></div>
+              <div class="row"><span class="pill warn">부족 1</span><strong>치킨마요</strong></div>
+            </div>
+            <div class="muted">목업: 클릭 시 상세가 열리는 대신, 오른쪽에 “선택됨”으로 가정</div>
+          </article>
+
+          <article class="card span5">
+            <h2>선택된 레시피(가벼운 모드)</h2>
+            <div class="kpi">
+              <div class="row"><span class="pill">제목</span><strong>크림파스타</strong></div>
+              <div class="row"><span class="pill">링크</span><span>youtube.com/…</span></div>
+              <div class="row"><span class="pill">메모</span><span>소스 비율 체크</span></div>
+              <div class="row"><span class="pill warn">부족</span><strong>생크림, 베이컨</strong></div>
+            </div>
+            <div class="inputRow">
+              <input class="input" placeholder="메모 추가…" />
+              <button class="btn" type="button">저장</button>
+            </div>
+            <div class="muted">실제 앱: “부족 재료만 장보기로” 버튼</div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v2 - 인벤토리</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v2</span>
+        </div>
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html">대시보드</a>
+          <a href="./inventory.html">인벤토리</a>
+          <a href="./recipes.html">레시피</a>
+          <a href="./shopping.html">장보기</a>
+          <a href="./account.html">계정</a>
+          <a href="../index.html">버전선택</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <h1 class="title">인벤토리 (v2)</h1>
+        <p class="muted">v2는 정보량을 줄이고, 리스트/상세를 카드 2개로만 표현.</p>
+      </section>
+
+      <section class="grid" aria-label="인벤토리">
+        <article class="card span12">
+          <h2>빠른 추가</h2>
+          <div class="inputRow">
+            <input class="input" placeholder="예: 대파" />
+            <button class="btn" type="button">추가</button>
+          </div>
+          <p class="muted">목업이라 입력은 저장되지 않음</p>
+        </article>
+
+        <article class="card span7">
+          <h2>리스트</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill warn">D-3</span><strong>우유</strong></div>
+            <div class="row"><span class="pill">냉장</span><strong>계란</strong></div>
+            <div class="row"><span class="pill">냉동</span><strong>만두</strong></div>
+            <div class="row"><span class="pill">상온</span><strong>파스타면</strong></div>
+          </div>
+        </article>
+
+        <article class="card span5">
+          <h2>상세</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill">이름</span><strong>우유</strong></div>
+            <div class="row"><span class="pill">위치</span><strong>냉장</strong></div>
+            <div class="row"><span class="pill warn">유통기한</span><strong>D-3</strong></div>
+            <div class="row"><span class="pill">메모</span><span class="muted">아침에 먹기</span></div>
+          </div>
+        </article>
+      </section>
+
+      <div class="footer">v2 경로: <code>/mock/v2/inventory.html</code></div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

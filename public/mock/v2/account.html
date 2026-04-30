@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v2 - 계정</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v2</span>
+        </div>
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html">대시보드</a>
+          <a href="./inventory.html">인벤토리</a>
+          <a href="./recipes.html">레시피</a>
+          <a href="./shopping.html">장보기</a>
+          <a href="./account.html">계정</a>
+          <a href="../index.html">버전선택</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <h1 class="title">계정 (v2)</h1>
+        <p class="muted">로그인/설정은 한 카드에 최소 구성.</p>
+      </section>
+
+      <section class="grid" aria-label="계정">
+        <article class="card span7">
+          <h2>로그인</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill">Email</span><span class="muted">user@example.com</span></div>
+            <div class="row"><span class="pill">Password</span><span class="muted">••••••••</span></div>
+          </div>
+          <div class="inputRow">
+            <input class="input" placeholder="이메일" />
+            <button class="btn" type="button">다음</button>
+          </div>
+          <div class="inputRow">
+            <input class="input" placeholder="비밀번호" />
+            <button class="btn" type="button">로그인</button>
+          </div>
+        </article>
+
+        <article class="card span5">
+          <h2>설정</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill">동기화</span><span class="muted">클라우드</span></div>
+            <div class="row"><span class="pill">테마</span><span class="muted">라이트</span></div>
+            <div class="row"><span class="pill">세션</span><span class="muted">로그아웃</span></div>
+          </div>
+          <p class="muted">실제 앱: 프로필/로그아웃</p>
+        </article>
+      </section>
+
+      <div class="footer">v2 경로: <code>/mock/v2/account.html</code></div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

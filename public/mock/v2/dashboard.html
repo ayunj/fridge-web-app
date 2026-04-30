@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v2 - 대시보드</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v2</span>
+        </div>
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html">대시보드</a>
+          <a href="./inventory.html">인벤토리</a>
+          <a href="./recipes.html">레시피</a>
+          <a href="./shopping.html">장보기</a>
+          <a href="./account.html">계정</a>
+          <a href="../index.html">버전선택</a>
+        </nav>
+      </header>
+
+      <section class="hero" aria-label="대시보드 소개">
+        <h1 class="title">대시보드에서 메뉴로 이동 (v2)</h1>
+        <p class="muted">
+          v1보다 화면을 단순화한 버전. 핵심만 카드로 보여주고, 상단 메뉴로 페이지가 이동해요.
+        </p>
+      </section>
+
+      <section class="grid" aria-label="대시보드 카드">
+        <article class="card span7">
+          <h2>오늘의 상태</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill warn">유통기한</span><strong>D-3</strong></div>
+            <div class="row"><span class="pill ok">가능 레시피</span><strong>7개</strong></div>
+            <div class="row"><span class="pill bad">부족 재료</span><strong>2개</strong></div>
+          </div>
+          <p class="muted">여기 카드에서 각 화면으로 들어가는 느낌(실제는 메뉴 클릭)</p>
+        </article>
+
+        <article class="card span5">
+          <h2>빠른 추가</h2>
+          <div class="inputRow">
+            <input class="input" placeholder="예: 우유" />
+            <button class="btn" type="button">추가</button>
+          </div>
+          <p class="muted">기본값: 마지막 위치 · 수량 1 · 유통기한 미설정</p>
+        </article>
+
+        <article class="card span12">
+          <h2>바로가기</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill">인벤토리</span><span class="muted">재료 리스트 + 필터</span></div>
+            <div class="row"><span class="pill">레시피</span><span class="muted">링크+메모 → 확장 가능</span></div>
+            <div class="row"><span class="pill">장보기</span><span class="muted">부족 재료만 체크리스트</span></div>
+          </div>
+        </article>
+      </section>
+
+      <div class="footer">v2 경로: <code>/mock/v2/dashboard.html</code></div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

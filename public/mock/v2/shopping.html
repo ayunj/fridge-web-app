@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v2 - 장보기</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v2</span>
+        </div>
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html">대시보드</a>
+          <a href="./inventory.html">인벤토리</a>
+          <a href="./recipes.html">레시피</a>
+          <a href="./shopping.html">장보기</a>
+          <a href="./account.html">계정</a>
+          <a href="../index.html">버전선택</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <h1 class="title">장보기 (v2)</h1>
+        <p class="muted">레시피에서 부족 재료만 자동으로 넘어온다는 가정.</p>
+      </section>
+
+      <section class="grid" aria-label="장보기">
+        <article class="card span7">
+          <h2>체크리스트</h2>
+          <div class="kpi">
+            <div class="row"><span class="pill">□</span><strong>생크림</strong></div>
+            <div class="row"><span class="pill">□</span><strong>베이컨</strong></div>
+          </div>
+          <p class="muted">목업: 체크는 미동작</p>
+        </article>
+
+        <article class="card span5">
+          <h2>메모</h2>
+          <div class="inputRow">
+            <input class="input" placeholder="예: 코스트코" />
+            <button class="btn" type="button">저장</button>
+          </div>
+          <p class="muted">실제 앱: 완료 처리/공유/정렬</p>
+        </article>
+      </section>
+
+      <div class="footer">v2 경로: <code>/mock/v2/shopping.html</code></div>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+

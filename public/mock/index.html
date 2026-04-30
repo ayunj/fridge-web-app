@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App - 목업 선택</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.08);
+        --border: rgba(255, 255, 255, 0.12);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.62);
+        --brand: #ff6bb0;
+        --brand2: #7be1ff;
+        --r-xl: 22px;
+        --r-lg: 18px;
+        --r-md: 14px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 520px at 12% -10%, rgba(255, 107, 176, 0.25), transparent 62%),
+          radial-gradient(980px 520px at 92% 8%, rgba(123, 225, 255, 0.22), transparent 60%),
+          radial-gradient(900px 560px at 64% 112%, rgba(124, 92, 255, 0.18), transparent 58%),
+          linear-gradient(180deg, #0b1020, #081222);
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 20px 14px 50px;
+        display: grid;
+        gap: 14px;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+      }
+      .brandRow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--brand), var(--brand2));
+        box-shadow: 0 16px 40px rgba(255, 107, 176, 0.22);
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--r-xl);
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        padding: 18px 16px;
+      }
+      .title {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: -0.04em;
+      }
+      .muted {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .tile {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border-radius: var(--r-xl);
+        border: 1px solid var(--border);
+        background: var(--panel2);
+      }
+      .tile h2 {
+        margin: 0;
+        font-size: 16px;
+        letter-spacing: -0.02em;
+      }
+      .pillRow {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .pill {
+        height: 30px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 800;
+        font-size: 12px;
+      }
+      .go {
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 107, 176, 0.28);
+        background: linear-gradient(135deg, rgba(255, 107, 176, 0.95), rgba(124, 92, 255, 0.95));
+        color: #fff;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      .footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        padding-top: 6px;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div class="brandRow">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge Web App 목업</span>
+        </div>
+        <a class="pill" href="/">앱(/)로 돌아가기</a>
+      </header>
+
+      <section class="card">
+        <h1 class="title">버전 2개로 다시 그린 “여러 장” HTML 목업</h1>
+        <p class="muted">
+          아래에서 v1 / v2를 선택하면 <strong>대시보드</strong>로 들어가고, <strong>메뉴 형태</strong>로 화면을 이동할 수 있어요.
+        </p>
+      </section>
+
+      <section class="grid" aria-label="버전 선택">
+        <article class="tile">
+          <h2>v1 — 좌측 사이드바 대시보드</h2>
+          <div class="pillRow">
+            <span class="pill">대시보드</span>
+            <span class="pill">사이드 메뉴</span>
+            <span class="pill">정보 밀도 높음</span>
+          </div>
+          <a class="go" href="./v1/dashboard.html">v1 시작</a>
+        </article>
+
+        <article class="tile">
+          <h2>v2 — 상단 메뉴 + 카드형 대시보드</h2>
+          <div class="pillRow">
+            <span class="pill">대시보드</span>
+            <span class="pill">상단 메뉴</span>
+            <span class="pill">정보 밀도 낮음</span>
+          </div>
+          <a class="go" href="./v2/dashboard.html">v2 시작</a>
+        </article>
+      </section>
+
+      <div class="footer">경로: <code>/mock/index.html</code></div>
+    </div>
+  </body>
+</html>
+

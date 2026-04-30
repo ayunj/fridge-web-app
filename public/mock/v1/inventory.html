@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fridge Web App v1 - 인벤토리</title>
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Fridge v1</span>
+        </div>
+        <p class="sub">대시보드 중심 + 좌측 메뉴로 이동</p>
+
+        <nav class="nav" data-nav aria-label="메뉴">
+          <a href="./dashboard.html"><span class="icon" aria-hidden="true">🏠</span>대시보드</a>
+          <a href="./inventory.html"><span class="icon" aria-hidden="true">🧺</span>인벤토리</a>
+          <a href="./recipes.html"><span class="icon" aria-hidden="true">📌</span>레시피</a>
+          <a href="./shopping.html"><span class="icon" aria-hidden="true">🛒</span>장보기</a>
+          <a href="./account.html"><span class="icon" aria-hidden="true">🔐</span>계정</a>
+        </nav>
+
+        <div class="sidebarFooter">
+          <a class="pill" href="../index.html">버전 선택으로</a>
+          <div style="margin-top: 8px">메뉴 클릭 → 다른 HTML로 이동</div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div class="crumb">
+            <span class="pill">v1</span>
+            <span class="pill">인벤토리</span>
+            <span class="pill">필터: 냉장/냉동/상온</span>
+          </div>
+          <div class="crumb">
+            <a class="pill" href="./dashboard.html">대시보드로</a>
+          </div>
+        </header>
+
+        <section class="grid" aria-label="인벤토리">
+          <article class="card span12">
+            <h1>빠른 추가(검색창 1개)</h1>
+            <div class="inputRow">
+              <input class="input" placeholder="예: 우유" />
+              <button class="btn" type="button">추가</button>
+            </div>
+            <div class="muted">엔터로 추가되는 UX를 가정 (목업이라 동작은 링크만)</div>
+          </article>
+
+          <article class="card span7">
+            <h2>리스트</h2>
+            <div class="kpi">
+              <div class="row"><span class="pill warn">D-3</span><strong>우유</strong></div>
+              <div class="row"><span class="pill">냉장</span><strong>계란</strong></div>
+              <div class="row"><span class="pill">상온</span><strong>파스타면</strong></div>
+              <div class="row"><span class="pill">냉동</span><strong>만두</strong></div>
+            </div>
+          </article>
+
+          <article class="card span5">
+            <h2>선택된 아이템(상세)</h2>
+            <div class="kpi">
+              <div class="row"><span class="pill">이름</span><strong>우유</strong></div>
+              <div class="row"><span class="pill">위치</span><strong>냉장</strong></div>
+              <div class="row"><span class="pill warn">유통기한</span><strong>D-3</strong></div>
+              <div class="row"><span class="pill">메모</span><span>아침에 먹기</span></div>
+            </div>
+            <div class="muted">실제 앱에서는 여기서 수정/삭제</div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./assets/app.js"></script>
+  </body>
+</html>
+
