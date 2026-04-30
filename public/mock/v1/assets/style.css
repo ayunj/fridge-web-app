@@ -280,15 +280,110 @@ a {
   transform: translateY(1px);
 }
 
+.menuButton {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(4px);
+  display: none;
+}
+
+.menuOverlay[data-open="true"] {
+  display: block;
+}
+
+.menuSheet {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 12px;
+  width: min(520px, calc(100% - 24px));
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 16, 32, 0.92);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.55);
+  display: none;
+  overflow: hidden;
+}
+
+.menuSheet[data-open="true"] {
+  display: block;
+}
+
+.menuHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.menuTitle {
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.menuClose {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.menuGrid {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.menuGrid a {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.menuGrid a[aria-current="page"] {
+  border-color: rgba(255, 107, 176, 0.26);
+  box-shadow: 0 18px 54px rgba(255, 107, 176, 0.12);
+}
+
+.menuHint {
+  padding: 0 12px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 @media (max-width: 920px) {
   .layout {
     grid-template-columns: 1fr;
   }
   .sidebar {
-    position: relative;
-    height: auto;
-    border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    display: none;
   }
 }
 

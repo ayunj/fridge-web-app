@@ -8,77 +8,26 @@
   </head>
   <body>
     <div class="layout">
-      <aside class="sidebar">
-        <div class="brand">
-          <span class="dot" aria-hidden="true"></span>
-          <span>Fridge v1</span>
-        </div>
-        <p class="sub">대시보드 중심 + 좌측 메뉴로 이동하는 버전</p>
-
-        <nav class="nav" data-nav aria-label="메뉴">
-          <a href="./dashboard.html">
-            <span class="icon" aria-hidden="true">🏠</span>
-            대시보드
-          </a>
-          <a href="./inventory.html">
-            <span class="icon" aria-hidden="true">🧺</span>
-            인벤토리
-          </a>
-          <a href="./recipes.html">
-            <span class="icon" aria-hidden="true">📌</span>
-            레시피
-          </a>
-          <a href="./shopping.html">
-            <span class="icon" aria-hidden="true">🛒</span>
-            장보기
-          </a>
-          <a href="./account.html">
-            <span class="icon" aria-hidden="true">🔐</span>
-            계정
-          </a>
-        </nav>
-
-        <div class="sidebarFooter">
-          <div><strong>바로가기</strong></div>
-          <div style="margin-top: 6px">
-            <a class="pill" href="../index.html">버전 선택으로</a>
-          </div>
-          <div style="margin-top: 8px">이건 “돌아가는” 정적 HTML 목업입니다.</div>
-        </div>
-      </aside>
-
       <main class="content">
         <header class="topbar">
           <div class="crumb">
-            <span class="pill">v1</span>
-            <span class="pill">대시보드</span>
-            <span class="pill warn">유통기한 D-3</span>
-            <span class="pill ok">가능 레시피 7</span>
+            <span class="pill">Fridge v1</span>
+            <span class="pill warn">D-3</span>
+            <span class="pill ok">가능 7</span>
           </div>
           <div class="crumb">
-            <a class="pill" href="./account.html">로그인</a>
+            <button class="menuButton" type="button" data-menu-open aria-expanded="false">메뉴</button>
           </div>
         </header>
 
         <section class="grid" aria-label="대시보드">
           <article class="card span8">
-            <h1>오늘의 요약</h1>
-            <div class="muted">
-              목표: 입력은 최소로, 확인은 한 화면에서. (여기선 기능 없이 화면/동선만)
-            </div>
+            <h1>대시보드(단순)</h1>
+            <div class="muted">복잡한 정보 대신, “지금 할 일” 3개만 보여줘요.</div>
             <div class="kpi">
-              <div class="row">
-                <span class="pill warn">유통기한 임박</span>
-                <strong>우유 · 계란</strong>
-              </div>
-              <div class="row">
-                <span class="pill bad">부족 재료</span>
-                <strong>2개 (생크림, 베이컨)</strong>
-              </div>
-              <div class="row">
-                <span class="pill ok">바로 가능한 레시피</span>
-                <strong>7개</strong>
-              </div>
+              <div class="row"><span class="pill warn">유통기한</span><strong>우유 · 계란</strong></div>
+              <div class="row"><span class="pill bad">부족</span><strong>생크림, 베이컨</strong></div>
+              <div class="row"><span class="pill ok">추천</span><strong>김치볶음밥</strong></div>
             </div>
           </article>
 
@@ -92,26 +41,34 @@
             <div class="muted">기본값: 마지막 위치 · 수량 1 · 유통기한 미설정</div>
           </article>
 
-          <article class="card span7">
-            <h2>인벤토리 스냅샷</h2>
+          <article class="card span12">
+            <h2>바로가기</h2>
             <div class="kpi">
-              <div class="row"><span class="pill">냉장</span><span>우유 · 계란 · 대파</span></div>
-              <div class="row"><span class="pill">냉동</span><span>만두 · 닭가슴살</span></div>
-              <div class="row"><span class="pill">상온</span><span>파스타면 · 참치캔</span></div>
+              <div class="row"><span class="pill">인벤토리</span><span class="muted">재료를 보고/추가</span></div>
+              <div class="row"><span class="pill">레시피</span><span class="muted">저장/추천 확인</span></div>
+              <div class="row"><span class="pill">장보기</span><span class="muted">부족 재료 체크</span></div>
             </div>
-          </article>
-
-          <article class="card span5">
-            <h2>추천 레시피</h2>
-            <div class="kpi">
-              <div class="row"><span class="pill ok">가능</span><strong>김치볶음밥</strong></div>
-              <div class="row"><span class="pill warn">거의 가능</span><strong>크림파스타 (부족 2)</strong></div>
-              <div class="row"><span class="pill warn">거의 가능</span><strong>치킨마요 (부족 1)</strong></div>
-            </div>
-            <div class="muted">“레시피 선택 → 부족 재료만 장보기로” 흐름</div>
           </article>
         </section>
       </main>
+    </div>
+
+    <div class="menuOverlay" data-menu-overlay data-open="false">
+      <div class="menuSheet" data-menu-sheet data-open="false" role="dialog" aria-label="메뉴">
+        <div class="menuHead">
+          <div class="menuTitle">메뉴</div>
+          <button class="menuClose" type="button" data-menu-close>닫기</button>
+        </div>
+        <nav class="menuGrid" data-nav aria-label="이동">
+          <a href="./dashboard.html"><span>대시보드</span><span>→</span></a>
+          <a href="./inventory.html"><span>인벤토리</span><span>→</span></a>
+          <a href="./recipes.html"><span>레시피</span><span>→</span></a>
+          <a href="./shopping.html"><span>장보기</span><span>→</span></a>
+          <a href="./account.html"><span>계정</span><span>→</span></a>
+          <a href="../index.html"><span>버전 선택</span><span>→</span></a>
+        </nav>
+        <div class="menuHint">팁: 메뉴는 숨기고, 화면은 단순하게.</div>
+      </div>
     </div>
 
     <script src="./assets/app.js"></script>

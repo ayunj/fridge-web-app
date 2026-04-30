@@ -8,36 +8,14 @@
   </head>
   <body>
     <div class="layout">
-      <aside class="sidebar">
-        <div class="brand">
-          <span class="dot" aria-hidden="true"></span>
-          <span>Fridge v1</span>
-        </div>
-        <p class="sub">대시보드 중심 + 좌측 메뉴로 이동</p>
-
-        <nav class="nav" data-nav aria-label="메뉴">
-          <a href="./dashboard.html"><span class="icon" aria-hidden="true">🏠</span>대시보드</a>
-          <a href="./inventory.html"><span class="icon" aria-hidden="true">🧺</span>인벤토리</a>
-          <a href="./recipes.html"><span class="icon" aria-hidden="true">📌</span>레시피</a>
-          <a href="./shopping.html"><span class="icon" aria-hidden="true">🛒</span>장보기</a>
-          <a href="./account.html"><span class="icon" aria-hidden="true">🔐</span>계정</a>
-        </nav>
-
-        <div class="sidebarFooter">
-          <a class="pill" href="../index.html">버전 선택으로</a>
-          <div style="margin-top: 8px">메뉴 클릭 → 다른 HTML로 이동</div>
-        </div>
-      </aside>
-
       <main class="content">
         <header class="topbar">
           <div class="crumb">
-            <span class="pill">v1</span>
+            <span class="pill">Fridge v1</span>
             <span class="pill">인벤토리</span>
-            <span class="pill">필터: 냉장/냉동/상온</span>
           </div>
           <div class="crumb">
-            <a class="pill" href="./dashboard.html">대시보드로</a>
+            <button class="menuButton" type="button" data-menu-open aria-expanded="false">메뉴</button>
           </div>
         </header>
 
@@ -73,6 +51,24 @@
           </article>
         </section>
       </main>
+    </div>
+
+    <div class="menuOverlay" data-menu-overlay data-open="false">
+      <div class="menuSheet" data-menu-sheet data-open="false" role="dialog" aria-label="메뉴">
+        <div class="menuHead">
+          <div class="menuTitle">메뉴</div>
+          <button class="menuClose" type="button" data-menu-close>닫기</button>
+        </div>
+        <nav class="menuGrid" data-nav aria-label="이동">
+          <a href="./dashboard.html"><span>대시보드</span><span>→</span></a>
+          <a href="./inventory.html"><span>인벤토리</span><span>→</span></a>
+          <a href="./recipes.html"><span>레시피</span><span>→</span></a>
+          <a href="./shopping.html"><span>장보기</span><span>→</span></a>
+          <a href="./account.html"><span>계정</span><span>→</span></a>
+          <a href="../index.html"><span>버전 선택</span><span>→</span></a>
+        </nav>
+        <div class="menuHint">팁: 이동은 메뉴에서만.</div>
+      </div>
     </div>
 
     <script src="./assets/app.js"></script>
