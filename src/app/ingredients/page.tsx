@@ -257,6 +257,27 @@ export default function IngredientsPage() {
   return (
     <AppShell>
       <div style={{ padding: 24, paddingTop: 20 }}>
+        {!isSupabaseEnabled ? (
+          <div
+            className="card"
+            style={{
+              padding: '10px 12px',
+              marginBottom: 14,
+              border: '0.5px solid rgba(255,255,255,0.10)',
+              background: 'rgba(255,255,255,0.04)',
+              color: 'rgba(211,209,199,0.86)',
+              fontSize: 12,
+              lineHeight: 1.45,
+            }}
+          >
+            <div style={{ fontSize: 11, color: 'rgba(211,209,199,0.60)', marginBottom: 2 }}>Supabase 비활성화</div>
+            배포 환경에서 <b>NEXT_PUBLIC_SUPABASE_URL</b> / <b>NEXT_PUBLIC_SUPABASE_ANON_KEY</b>가 설정되지 않아 지금은 목업 데이터를 보여줘요.
+            <div style={{ marginTop: 6, fontSize: 11, color: 'rgba(211,209,199,0.62)' }}>
+              Vercel에서 <b>Preview</b> 환경에도 동일하게 환경변수를 추가한 뒤 Redeploy 해주세요.
+            </div>
+          </div>
+        ) : null}
+
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
