@@ -21,6 +21,14 @@ type LocalIngredientAdd = {
 const SHOPPING_KEY = 'shopping.items.v1';
 const LOCAL_ING_ADDS_KEY = 'ingredients.localAdds.v1';
 
+type ShoppingViewItem = {
+  id: string;
+  name: string;
+  from: string;
+  done: boolean;
+  memo?: string | null;
+};
+
 function loadShopping() {
   if (typeof window === 'undefined') return INITIAL_SHOPPING;
   try {
@@ -28,17 +36,23 @@ function loadShopping() {
     if (!raw) return INITIAL_SHOPPING;
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return INITIAL_SHOPPING;
-    return parsed.filter((x): x is typeof INITIAL_SHOPPING[number] => {
+    return parsed.filter((x): x is ShoppingViewItem => {
       if (!x || typeof x !== 'object') return false;
       const r = x as Record<string, unknown>;
-      return typeof r.id === 'string' && typeof r.name === 'string' && typeof r.from === 'string' && typeof r.done === 'boolean';
+      return (
+        typeof r.id === 'string' &&
+        typeof r.name === 'string' &&
+        typeof r.from === 'string' &&
+        typeof r.done === 'boolean' &&
+        (typeof r.memo === 'undefined' || r.memo === null || typeof r.memo === 'string')
+      );
     });
   } catch {
     return INITIAL_SHOPPING;
   }
 }
 
-function saveShopping(items: typeof INITIAL_SHOPPING) {
+function saveShopping(items: ShoppingViewItem[]) {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(SHOPPING_KEY, JSON.stringify(items.slice(0, 500)));
@@ -77,29 +91,34 @@ async function upsertDefAndInsertItem(nameRaw: string) {
 }
 
 export default function ShoppingPage() {
-  const [items, setItems] = useState(loadShopping);
   const [input, setInput] = useState('');
+  const [inputMemo, setInputMemo] = useState('');
   const [dbErr, setDbErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const sb = supabase;
   const usingDb = isSupabaseEnabled && sb !== null;
+  const [items, setItems] = useState<ShoppingViewItem[]>(() => (usingDb ? [] : loadShopping()));
 
   type DbShoppingRow = {
     id: string;
     name: string;
     from: string;
+    memo: string | null;
     checked: boolean;
     created_at: string;
   };
 
   const fetchDb = async (client: SupabaseClient) => {
+    setLoading(true);
     const res = await client
       .from('shopping_items')
-      .select('id,name,"from",checked,created_at')
+      .select('id,name,"from",memo,checked,created_at')
       .order('checked', { ascending: true })
       .order('created_at', { ascending: false });
     if (res.error) {
       setDbErr(res.error.message);
+      setLoading(false);
       return;
     }
     setDbErr(null);
@@ -109,9 +128,11 @@ export default function ShoppingPage() {
       id: r.id,
       name: r.name,
       from: r.from,
+      memo: r.memo ?? null,
       done: !!r.checked,
     }));
     setItems(next);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -179,9 +200,10 @@ export default function ShoppingPage() {
   const addItem = () => {
     if (!input.trim()) return;
     const name = input.trim();
+    const memo = inputMemo.trim() || null;
     if (!usingDb) {
       setItems(prev => {
-        const next = [...prev, { id: `s${Date.now()}`, name, from: '직접 추가', done: false }];
+        const next = [...prev, { id: `s${Date.now()}`, name, from: '직접 추가', done: false, memo }];
         saveShopping(next);
         return next;
       });
@@ -189,11 +211,12 @@ export default function ShoppingPage() {
       if (!sb) {
         setDbErr('Supabase 연결이 꺼져 있어요.');
         setInput('');
+        setInputMemo('');
         return;
       }
       Promise.resolve()
         .then(async () => {
-          const ins = await sb.from('shopping_items').insert({ name, from: '직접 추가', checked: false });
+          const ins = await sb.from('shopping_items').insert({ name, from: '직접 추가', memo, checked: false });
           if (ins.error) throw ins.error;
         })
         .then(() => fetchDb(sb))
@@ -206,6 +229,7 @@ export default function ShoppingPage() {
         });
     }
     setInput('');
+    setInputMemo('');
   };
 
   const todo = useMemo(() => items.filter(s => !s.done), [items]);
@@ -253,6 +277,7 @@ export default function ShoppingPage() {
             </div>
           </div>
         ) : null}
+        {/* loading banner intentionally hidden (no flicker on mutations) */}
 
         {/* Input */}
         <div className="card" style={{ padding: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -262,7 +287,14 @@ export default function ShoppingPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addItem()}
-            style={{ flex: 1, height: 36, border: 'none', outline: 'none', background: 'transparent', fontSize: 13 }}
+            style={{ width: 800, maxWidth: '60%', height: 36, border: 'none', outline: 'none', background: 'transparent', fontSize: 13 }}
+          />
+          <input
+            placeholder="비고"
+            value={inputMemo}
+            onChange={(e) => setInputMemo(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            style={{ flex: 1, height: 36, border: 'none', outline: 'none', background: 'transparent', fontSize: 12.5, color: 'var(--text-secondary)', minWidth: 200 }}
           />
           <button className="btn sm" style={{ marginRight: 4 }} onClick={addItem}>추가</button>
         </div>
@@ -275,67 +307,24 @@ export default function ShoppingPage() {
           </div>
           <div className="card" style={{ padding: '4px 0' }}>
             {todo.map((s, idx) => (
-              <div key={s.id} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 16px',
-                borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)',
-              }}>
-                <span className="chk" onClick={() => toggle(s.id)} />
-                <span style={{ fontSize: 13, flex: 1 }}>{s.name}</span>
-                <span className="tag" style={{ fontSize: 10.5 }}>
-                  {s.from === '직접 추가' ? s.from : `← ${s.from}`}
-                </span>
-                <button
-                  onClick={() => setItems(prev => {
-                    const next = prev.filter(x => x.id !== s.id);
-                    if (!usingDb) saveShopping(next);
-                    else {
-                      if (!sb) return next;
-                      Promise.resolve()
-                        .then(async () => {
-                          const del = await sb.from('shopping_items').delete().eq('id', s.id);
-                          if (del.error) throw del.error;
-                        })
-                        .then(() => fetchDb(sb))
-                        .catch(() => {
-                          // best-effort
-                        });
-                    }
-                    return next;
-                  })}
-                  style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="close" size={13} />
-                </button>
-              </div>
-            ))}
-            {todo.length === 0 && (
-              <div style={{ padding: '20px 16px', color: 'var(--text-tertiary)', fontSize: 12, textAlign: 'center' }}>
-                모든 항목을 구매했어요
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Done */}
-        {done.length > 0 && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span className="h-section">완료</span>
-              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{done.length}</span>
-            </div>
-            <div className="card" style={{ padding: '4px 0' }}>
-              {done.map((s, idx) => (
-                <div key={s.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
+              <div key={s.id} style={{ borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
                   padding: '10px 16px',
-                  borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)',
-                  opacity: 0.5,
+                  flexWrap: 'wrap',
                 }}>
-                  <span className="chk on" onClick={() => toggle(s.id)}>
-                    <Icon name="check" size={11} />
-                  </span>
-                  <span style={{ fontSize: 13, flex: 1, textDecoration: 'line-through' }}>{s.name}</span>
-                  <span className="tag" style={{ fontSize: 10.5 }}>
+                  <span className="chk" onClick={() => toggle(s.id)} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13 }}>{s.name}</div>
+                    {s.memo ? (
+                      <div style={{ marginTop: 3, fontSize: 11.5, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {s.memo}
+                      </div>
+                    ) : null}
+                  </div>
+                  <span className="tag" style={{ fontSize: 10.5, flexShrink: 0 }}>
                     {s.from === '직접 추가' ? s.from : `← ${s.from}`}
                   </span>
                   <button
@@ -356,9 +345,73 @@ export default function ShoppingPage() {
                       }
                       return next;
                     })}
-                    style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Icon name="close" size={13} />
                   </button>
+                </div>
+              </div>
+            ))}
+            {todo.length === 0 && (
+              <div style={{ padding: '20px 16px', color: 'var(--text-tertiary)', fontSize: 12, textAlign: 'center' }}>
+                모든 항목을 구매했어요
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Done */}
+        {done.length > 0 && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span className="h-section">완료</span>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{done.length}</span>
+            </div>
+            <div className="card" style={{ padding: '4px 0' }}>
+              {done.map((s, idx) => (
+                <div key={s.id} style={{ borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)', opacity: 0.5 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '10px 16px',
+                    flexWrap: 'wrap',
+                  }}>
+                    <span className="chk on" onClick={() => toggle(s.id)}>
+                      <Icon name="check" size={11} />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, textDecoration: 'line-through' }}>{s.name}</div>
+                      {s.memo ? (
+                        <div style={{ marginTop: 3, fontSize: 11.5, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.memo}
+                        </div>
+                      ) : null}
+                    </div>
+                    <span className="tag" style={{ fontSize: 10.5, flexShrink: 0 }}>
+                      {s.from === '직접 추가' ? s.from : `← ${s.from}`}
+                    </span>
+                    <button
+                      onClick={() => setItems(prev => {
+                        const next = prev.filter(x => x.id !== s.id);
+                        if (!usingDb) saveShopping(next);
+                        else {
+                          if (!sb) return next;
+                          Promise.resolve()
+                            .then(async () => {
+                              const del = await sb.from('shopping_items').delete().eq('id', s.id);
+                              if (del.error) throw del.error;
+                            })
+                            .then(() => fetchDb(sb))
+                            .catch(() => {
+                              // best-effort
+                            });
+                        }
+                        return next;
+                      })}
+                      style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon name="close" size={13} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

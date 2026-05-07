@@ -838,20 +838,22 @@ function RecipeForm({
           {error?.title ? <div style={{ fontSize: 11.5, color: '#b95436' }}>{error.title}</div> : null}
         </Field>
         <Field label="종류">
-          <select
-            value={form.recipeType ?? ''}
-            onChange={(e) => setForm((p) => ({ ...p, recipeType: e.target.value || null }))}
-            style={inputStyle()}
-          >
-            <option value="">선택 안 함</option>
-            <option value="한식">한식</option>
-            <option value="중식">중식</option>
-            <option value="일식">일식</option>
-            <option value="양식">양식</option>
-            <option value="디저트">디저트</option>
-            <option value="간편식">간편식</option>
-            <option value="기타">기타</option>
-          </select>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {(['한식', '중식', '일식', '양식', '디저트', '간편식', '기타'] as const).map((t) => {
+              const on = (form.recipeType ?? '') === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  className={`pill ${on ? 'active' : ''}`}
+                  onClick={() => setForm((p) => ({ ...p, recipeType: t }))}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
           {error?.recipeType ? <div style={{ fontSize: 11.5, color: '#b95436' }}>{error.recipeType}</div> : null}
         </Field>
         <Field label="예상 칼로리(kcal)">
