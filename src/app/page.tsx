@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Icon from '@/components/Icon';
 import { INGREDIENTS, RECIPES, SHOPPING, LOC_LABEL, LOC_TEMP, type Loc, dCount, dSeverity } from '@/lib/data';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
+import Modal from '@/components/Modal';
+import IngredientEditor from '@/app/ingredients/_components/IngredientEditor';
 
 type DbIngredientRow = {
   id: string;
@@ -64,6 +66,7 @@ export default function DashboardPage() {
   const cookable = RECIPES.slice(0, 6);
   const [rows, setRows] = useState<DbIngredientRow[] | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   const fetchRows = async () => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -150,7 +153,7 @@ export default function DashboardPage() {
         {/* Page header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>안녕하세요, 지윤님</h1>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>안녕하세요, 윤정님</h1>
             <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
               오늘 냉장고에 <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{totals.total}개</b>의 재료가 있어요.{' '}
               유통기한 임박 <b style={{ color: 'var(--status-danger)', fontWeight: 500 }}>{totals.soon7}개</b>를 먼저 사용해 보세요.
@@ -158,7 +161,9 @@ export default function DashboardPage() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Link href="/calendar" className="btn ghost"><Icon name="cal" size={13} /> 식사 달력</Link>
-            <Link href="/ingredients" className="btn"><Icon name="plus" size={13} /> 재료 추가</Link>
+            <button type="button" className="btn" onClick={() => setIsAddOpen(true)}>
+              <Icon name="plus" size={13} /> 재료 추가
+            </button>
           </div>
         </div>
 
@@ -237,6 +242,19 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      {isAddOpen ? (
+        <Modal title="재료 추가" onClose={() => setIsAddOpen(false)}>
+          <div style={{ marginBottom: 10, fontSize: 11.5, color: 'var(--text-tertiary)' }}>
+            저장하면 대시보드/재료 목록이 자동으로 갱신돼요.
+          </div>
+          <IngredientEditor closeOnSave />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+            <button type="button" className="pill" onClick={() => setIsAddOpen(false)} style={{ cursor: 'pointer' }}>
+              닫기
+            </button>
+          </div>
+        </Modal>
+      ) : null}
     </AppShell>
   );
 }

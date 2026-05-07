@@ -14,6 +14,7 @@ type DbItemRow = {
   loc: Loc;
   qty_text: string | null;
   expires_at: string | null; // YYYY-MM-DD
+  note?: string | null;
   ingredient_def_id: string;
   created_at: string | null;
 };
@@ -28,6 +29,7 @@ type IngredientItemsUpdate = {
   loc: Loc;
   qty_text: string | null;
   expires_at: string | null;
+  note?: string | null;
 };
 
 type IngredientDefsUpdate = {
@@ -36,10 +38,23 @@ type IngredientDefsUpdate = {
 };
 
 function getErrMessage(e: unknown): string {
-  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
-    return (e as { message: string }).message;
-  }
-  return '알 수 없는 에러가 발생했어요.';
+  if (!e || typeof e !== 'object') return '알 수 없는 에러가 발생했어요.';
+  const any = e as {
+    message?: unknown;
+    code?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+  const msg = typeof any.message === 'string' ? any.message : '알 수 없는 에러가 발생했어요.';
+  const code = typeof any.code === 'string' ? any.code : '';
+  const details = typeof any.details === 'string' ? any.details : '';
+  const hint = typeof any.hint === 'string' ? any.hint : '';
+
+  const extra = [code ? `code=${code}` : '', details ? `details=${details}` : '', hint ? `hint=${hint}` : '']
+    .filter(Boolean)
+    .join(' · ');
+
+  return extra ? `${msg} (${extra})` : msg;
 }
 
 function daysUntil(expiresAt: string | null): number {
@@ -64,16 +79,26 @@ function inputStyle(): React.CSSProperties {
   };
 }
 
+function isMissingColumnError(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const any = e as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+  // Postgres undefined_column
+  if (any.code === '42703') return true;
+  const msg = typeof any.message === 'string' ? any.message : '';
+  return /column .* does not exist/i.test(msg) || /undefined column/i.test(msg);
+}
+
 export default function IngredientEditor({
   id,
   onCloseHref,
   closeOnSave,
 }: {
-  id: string;
+  id?: string;
   onCloseHref?: string;
   closeOnSave?: boolean;
 }) {
   const router = useRouter();
+  const isCreate = !id || id === 'new';
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -93,7 +118,9 @@ export default function IngredientEditor({
   const [loc, setLoc] = useState<Loc>('fridge');
   const [qtyText, setQtyText] = useState('');
   const [expiresAt, setExpiresAt] = useState<string>('');
+  const [note, setNote] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
+  const [supportsNote, setSupportsNote] = useState<boolean | null>(null);
 
   const d = useMemo(() => daysUntil(expiresAt || null), [expiresAt]);
   const sev = dSeverity(d);
@@ -157,6 +184,50 @@ export default function IngredientEditor({
   };
 
   useEffect(() => {
+    if (isCreate) {
+      if (!isSupabaseEnabled || !supabase) {
+        Promise.resolve().then(() => {
+          setErr('Supabase 연결이 꺼져 있어요.');
+          setLoading(false);
+        });
+        return;
+      }
+
+      let cancelled = false;
+      (async () => {
+        setLoading(true);
+        setErr(null);
+        const [catsRes, locRes] = await Promise.all([
+          supabase.from('categories').select('id,name,sort_order').order('sort_order', { ascending: true }).order('name', { ascending: true }),
+          supabase.from('locations').select('code,label').order('code', { ascending: true }),
+        ]);
+        if (cancelled) return;
+        if (catsRes.error) throw catsRes.error;
+        if (locRes.error) throw locRes.error;
+
+        setCats((catsRes.data ?? []) as (CategoryRow & { sort_order?: number | null })[]);
+        setLocs((locRes.data ?? []) as unknown as LocationRow[]);
+
+        setDefId(null);
+        setName('');
+        setCategoryId('');
+        setLoc('fridge');
+        setQtyText('');
+        setExpiresAt('');
+        setNote('');
+        setSavedAt(null);
+        setLoading(false);
+      })().catch((e: unknown) => {
+        if (cancelled) return;
+        setErr(getErrMessage(e));
+        setLoading(false);
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
     if (!id) return;
 
     // mock: edit is local-only
@@ -191,11 +262,27 @@ export default function IngredientEditor({
       const [catsRes, locRes, itemRes] = await Promise.all([
         supabase.from('categories').select('id,name,sort_order').order('sort_order', { ascending: true }).order('name', { ascending: true }),
         supabase.from('locations').select('code,label').order('code', { ascending: true }),
-        supabase
-          .from('ingredient_items')
-          .select('id,loc,qty_text,expires_at,ingredient_def_id,created_at')
-          .eq('id', id)
-          .maybeSingle(),
+        (async () => {
+          // note 컬럼이 있을 수도/없을 수도 있어서 2단계로 안전하게 조회
+          const withNote = await supabase
+            .from('ingredient_items')
+            .select('id,loc,qty_text,expires_at,note,ingredient_def_id,created_at')
+            .eq('id', id)
+            .maybeSingle();
+          if (!withNote.error) {
+            setSupportsNote(true);
+            return withNote;
+          }
+          if (isMissingColumnError(withNote.error)) {
+            setSupportsNote(false);
+            return await supabase
+              .from('ingredient_items')
+              .select('id,loc,qty_text,expires_at,ingredient_def_id,created_at')
+              .eq('id', id)
+              .maybeSingle();
+          }
+          return withNote;
+        })(),
       ]);
 
       if (cancelled) return;
@@ -234,6 +321,7 @@ export default function IngredientEditor({
       setLoc(item.loc);
       setQtyText(item.qty_text ?? '');
       setExpiresAt(item.expires_at ?? '');
+      setNote((item.note ?? '') || '');
 
       setLoading(false);
     })().catch((e: unknown) => {
@@ -245,22 +333,75 @@ export default function IngredientEditor({
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isCreate]);
 
   const onSave = async () => {
-    if (id.startsWith('mock-')) return;
+    if (!id && !isCreate) return;
+    if (id?.startsWith('mock-')) return;
     if (!isSupabaseEnabled || !supabase) return;
-    if (!defId) return;
+    if (!isCreate && !defId) return;
+    if (isCreate && !name.trim()) {
+      setErr('재료 이름을 입력해 주세요.');
+      return;
+    }
 
     setSaving(true);
     setErr(null);
 
     try {
+      if (isCreate) {
+        const nameTrimmed = name.trim();
+        const existing = await supabase.from('ingredient_defs').select('id').eq('name', nameTrimmed).maybeSingle();
+        if (existing.error) throw existing.error;
+
+        const newDefId =
+          existing.data?.id ??
+          (
+            await supabase
+              .from('ingredient_defs')
+              .insert({ name: nameTrimmed, category_id: categoryId || null })
+              .select('id')
+              .single()
+          ).data?.id;
+
+        if (!newDefId) throw new Error('재료 정의를 만들지 못했어요.');
+
+        const baseItem = {
+          ingredient_def_id: newDefId,
+          loc,
+          qty_text: qtyText || null,
+          expires_at: expiresAt ? expiresAt : null,
+        } as Record<string, unknown>;
+        if (supportsNote !== false) baseItem.note = note.trim() || null;
+
+        const ins = await supabase.from('ingredient_items').insert(baseItem);
+        if (ins.error) {
+          if (supportsNote !== false && isMissingColumnError(ins.error)) {
+            setSupportsNote(false);
+            const retry = await supabase.from('ingredient_items').insert({
+              ingredient_def_id: newDefId,
+              loc,
+              qty_text: qtyText || null,
+              expires_at: expiresAt ? expiresAt : null,
+            });
+            if (retry.error) throw retry.error;
+          } else {
+            throw ins.error;
+          }
+        }
+
+        setSavedAt(Date.now());
+        window.dispatchEvent(new Event('ingredients:changed'));
+        if (closeOnSave) router.back();
+        return;
+      }
+
       const updatesItem: IngredientItemsUpdate = {
         loc,
         qty_text: qtyText || null,
         expires_at: expiresAt ? expiresAt : null,
       };
+      if (supportsNote !== false) updatesItem.note = note.trim() || null;
 
       const updatesDef: IngredientDefsUpdate = {
         name: name.trim(),
@@ -272,7 +413,21 @@ export default function IngredientEditor({
         supabase.from('ingredient_defs').update(updatesDef).eq('id', defId),
       ]);
 
-      if (uItem.error) throw uItem.error;
+      if (uItem.error) {
+        // note 컬럼이 없으면 update가 실패할 수 있어, 그때는 note 빼고 한 번 더 저장
+        if (supportsNote !== false && isMissingColumnError(uItem.error)) {
+          setSupportsNote(false);
+          const fallback: IngredientItemsUpdate = {
+            loc,
+            qty_text: qtyText || null,
+            expires_at: expiresAt ? expiresAt : null,
+          };
+          const retry = await supabase.from('ingredient_items').update(fallback).eq('id', id);
+          if (retry.error) throw retry.error;
+        } else {
+          throw uItem.error;
+        }
+      }
       if (uDef.error) throw uDef.error;
 
       setSavedAt(Date.now());
@@ -390,6 +545,31 @@ export default function IngredientEditor({
                 <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>유통기한</div>
                 <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} style={inputStyle()} />
               </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>비고</div>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="예) 개봉함, 반쪽 남음, 다음주까지 사용"
+                style={{
+                  border: '0.5px solid var(--border)',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  outline: 'none',
+                  background: 'var(--surface)',
+                  fontSize: 13,
+                  color: 'var(--text-primary)',
+                  minHeight: 86,
+                  resize: 'vertical',
+                }}
+              />
+              {supportsNote === false ? (
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                  (현재 DB에 비고 컬럼이 없어 저장되진 않아요)
+                </div>
+              ) : null}
             </div>
           </div>
 
