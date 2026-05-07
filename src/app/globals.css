@@ -57,6 +57,13 @@ html, body {
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input { font-family: inherit; }
+textarea { font-family: inherit; }
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
 
 /* ── Atoms ──────────────────────────────────────────────── */
 .pill {
