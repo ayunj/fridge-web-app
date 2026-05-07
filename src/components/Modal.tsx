@@ -6,11 +6,13 @@ import Icon from '@/components/Icon';
 
 export default function Modal({
   title,
+  actions,
   children,
   maxWidth = 760,
   onClose,
 }: {
   title?: string;
+  actions?: React.ReactNode;
   children: React.ReactNode;
   maxWidth?: number;
   onClose?: () => void;
@@ -67,6 +69,7 @@ export default function Modal({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>{title ?? ''}</div>
           <div style={{ flex: 1 }} />
+          {actions ? <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{actions}</div> : null}
           <button
             type="button"
             onClick={() => close()}

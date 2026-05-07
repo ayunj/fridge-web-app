@@ -13,6 +13,8 @@ type DbItemRow = {
   id: string;
   loc: Loc;
   qty_text: string | null;
+  quantity?: number | null;
+  unit?: string | null;
   expires_at: string | null; // YYYY-MM-DD
   note?: string | null;
   ingredient_def_id: string;
@@ -28,6 +30,8 @@ type DbDefRow = {
 type IngredientItemsUpdate = {
   loc: Loc;
   qty_text: string | null;
+  quantity?: number | null;
+  unit?: string | null;
   expires_at: string | null;
   note?: string | null;
 };
@@ -68,6 +72,7 @@ function daysUntil(expiresAt: string | null): number {
 
 function inputStyle(): React.CSSProperties {
   return {
+    width: '100%',
     height: 38,
     border: '0.5px solid var(--border)',
     borderRadius: 10,
@@ -117,10 +122,13 @@ export default function IngredientEditor({
   const [name, setName] = useState('');
   const [loc, setLoc] = useState<Loc>('fridge');
   const [qtyText, setQtyText] = useState('');
+  const [quantityText, setQuantityText] = useState('');
+  const [unit, setUnit] = useState('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [note, setNote] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [supportsNote, setSupportsNote] = useState<boolean | null>(null);
+  const [supportsQtySplit, setSupportsQtySplit] = useState<boolean | null>(null);
 
   const d = useMemo(() => daysUntil(expiresAt || null), [expiresAt]);
   const sev = dSeverity(d);
@@ -197,9 +205,16 @@ export default function IngredientEditor({
       (async () => {
         setLoading(true);
         setErr(null);
-        const [catsRes, locRes] = await Promise.all([
+        const [catsRes, locRes, probeQtySplit] = await Promise.all([
           supabase.from('categories').select('id,name,sort_order').order('sort_order', { ascending: true }).order('name', { ascending: true }),
           supabase.from('locations').select('code,label').order('code', { ascending: true }),
+          (async () => {
+            const probe = await supabase.from('ingredient_items').select('id,quantity,unit').limit(1);
+            if (!probe.error) return true;
+            if (isMissingColumnError(probe.error)) return false;
+            // 알 수 없는 에러면 기존 UX 유지(분리 입력 숨김)
+            return false;
+          })(),
         ]);
         if (cancelled) return;
         if (catsRes.error) throw catsRes.error;
@@ -207,12 +222,15 @@ export default function IngredientEditor({
 
         setCats((catsRes.data ?? []) as (CategoryRow & { sort_order?: number | null })[]);
         setLocs((locRes.data ?? []) as unknown as LocationRow[]);
+        setSupportsQtySplit(probeQtySplit);
 
         setDefId(null);
         setName('');
         setCategoryId('');
         setLoc('fridge');
         setQtyText('');
+        setQuantityText('');
+        setUnit('');
         setExpiresAt('');
         setNote('');
         setSavedAt(null);
@@ -263,25 +281,43 @@ export default function IngredientEditor({
         supabase.from('categories').select('id,name,sort_order').order('sort_order', { ascending: true }).order('name', { ascending: true }),
         supabase.from('locations').select('code,label').order('code', { ascending: true }),
         (async () => {
-          // note 컬럼이 있을 수도/없을 수도 있어서 2단계로 안전하게 조회
-          const withNote = await supabase
+          // note / quantity / unit 컬럼이 있을 수도/없을 수도 있어서 단계적으로 안전하게 조회
+          const withAll = await supabase
             .from('ingredient_items')
-            .select('id,loc,qty_text,expires_at,note,ingredient_def_id,created_at')
+            .select('id,loc,qty_text,quantity,unit,expires_at,note,ingredient_def_id,created_at')
             .eq('id', id)
             .maybeSingle();
-          if (!withNote.error) {
+          if (!withAll.error) {
             setSupportsNote(true);
-            return withNote;
+            setSupportsQtySplit(true);
+            return withAll;
           }
-          if (isMissingColumnError(withNote.error)) {
-            setSupportsNote(false);
-            return await supabase
+          if (isMissingColumnError(withAll.error)) {
+            // 어떤 컬럼이 없는지 모르니, note만 빼고 다시
+            const withoutNote = await supabase
               .from('ingredient_items')
-              .select('id,loc,qty_text,expires_at,ingredient_def_id,created_at')
+              .select('id,loc,qty_text,quantity,unit,expires_at,ingredient_def_id,created_at')
               .eq('id', id)
               .maybeSingle();
+            if (!withoutNote.error) {
+              setSupportsNote(false);
+              setSupportsQtySplit(true);
+              return withoutNote;
+            }
+
+            if (isMissingColumnError(withoutNote.error)) {
+              // quantity/unit도 없을 수 있어 최후 fallback
+              setSupportsNote(false);
+              setSupportsQtySplit(false);
+              return await supabase
+                .from('ingredient_items')
+                .select('id,loc,qty_text,expires_at,ingredient_def_id,created_at')
+                .eq('id', id)
+                .maybeSingle();
+            }
+            return withoutNote;
           }
-          return withNote;
+          return withAll;
         })(),
       ]);
 
@@ -320,6 +356,14 @@ export default function IngredientEditor({
       setCategoryId(def.category_id ?? '');
       setLoc(item.loc);
       setQtyText(item.qty_text ?? '');
+      const qtyDerived =
+        typeof item.quantity === 'number'
+          ? String(item.quantity)
+          : item.qty_text && /^[0-9]+(\.[0-9]+)?$/.test(item.qty_text.trim())
+            ? item.qty_text.trim()
+            : '';
+      setQuantityText(qtyDerived);
+      setUnit(item.unit ?? '');
       setExpiresAt(item.expires_at ?? '');
       setNote((item.note ?? '') || '');
 
@@ -366,13 +410,18 @@ export default function IngredientEditor({
 
         if (!newDefId) throw new Error('재료 정의를 만들지 못했어요.');
 
+        const derivedQtyText = [quantityText.trim(), unit.trim()].filter(Boolean).join(' ');
         const baseItem = {
           ingredient_def_id: newDefId,
           loc,
-          qty_text: qtyText || null,
+          qty_text: supportsQtySplit ? (derivedQtyText || null) : qtyText || null,
           expires_at: expiresAt ? expiresAt : null,
         } as Record<string, unknown>;
         if (supportsNote !== false) baseItem.note = note.trim() || null;
+        if (supportsQtySplit) {
+          baseItem.quantity = quantityText.trim() === '' ? null : Number(quantityText);
+          baseItem.unit = unit.trim() || null;
+        }
 
         const ins = await supabase.from('ingredient_items').insert(baseItem);
         if (ins.error) {
@@ -381,7 +430,7 @@ export default function IngredientEditor({
             const retry = await supabase.from('ingredient_items').insert({
               ingredient_def_id: newDefId,
               loc,
-              qty_text: qtyText || null,
+              qty_text: supportsQtySplit ? (derivedQtyText || null) : qtyText || null,
               expires_at: expiresAt ? expiresAt : null,
             });
             if (retry.error) throw retry.error;
@@ -398,7 +447,17 @@ export default function IngredientEditor({
 
       const updatesItem: IngredientItemsUpdate = {
         loc,
-        qty_text: qtyText || null,
+        qty_text: (() => {
+          if (!supportsQtySplit) return qtyText || null;
+          const t = [quantityText.trim(), unit.trim()].filter(Boolean).join(' ');
+          return t || null;
+        })(),
+        ...(supportsQtySplit
+          ? {
+              quantity: quantityText.trim() === '' ? null : Number(quantityText),
+              unit: unit.trim() || null,
+            }
+          : {}),
         expires_at: expiresAt ? expiresAt : null,
       };
       if (supportsNote !== false) updatesItem.note = note.trim() || null;
@@ -518,15 +577,36 @@ export default function IngredientEditor({
                 </button>
               </div>
 
-              <div style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>수량</div>
-                <input
-                  value={qtyText}
-                  onChange={(e) => setQtyText(e.target.value)}
-                  style={inputStyle()}
-                  placeholder="예) 8개, 300g"
-                />
-              </div>
+              {supportsQtySplit ? (
+                <div style={{ width: 320, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>수량 / 단위</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
+                    <input
+                      value={quantityText}
+                      onChange={(e) => setQuantityText(e.target.value)}
+                      style={inputStyle()}
+                      placeholder="예) 2"
+                      inputMode="decimal"
+                    />
+                    <input
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      style={inputStyle()}
+                      placeholder="예) 개, g"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ width: 220, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>수량</div>
+                  <input
+                    value={qtyText}
+                    onChange={(e) => setQtyText(e.target.value)}
+                    style={inputStyle()}
+                    placeholder="예) 8개, 300g"
+                  />
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
