@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/Icon';
 
@@ -8,20 +8,23 @@ export default function Modal({
   title,
   children,
   maxWidth = 760,
+  onClose,
 }: {
   title?: string;
   children: React.ReactNode;
   maxWidth?: number;
+  onClose?: () => void;
 }) {
   const router = useRouter();
+  const close = useMemo(() => onClose ?? (() => router.back()), [onClose, router]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') router.back();
+      if (e.key === 'Escape') close();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router]);
+  }, [close]);
 
   return (
     <div
@@ -38,7 +41,7 @@ export default function Modal({
       }}
     >
       <div
-        onClick={() => router.back()}
+        onClick={() => close()}
         style={{
           position: 'absolute',
           inset: 0,
@@ -62,7 +65,7 @@ export default function Modal({
           <div style={{ flex: 1 }} />
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => close()}
             className="pill"
             style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
