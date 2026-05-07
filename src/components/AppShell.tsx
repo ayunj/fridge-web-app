@@ -264,12 +264,22 @@ function MobileTabbar({ active }: { active: string }) {
 }
 
 // ── Mobile Sidebar ──────────────────────────────────────────
-function MobileSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+function MobileSidebar({
+  open,
+  onClose,
+  ingSummary,
+  recipeCount,
+}: {
+  open: boolean;
+  onClose: () => void;
+  ingSummary: IngredientSummary | null;
+  recipeCount: number | null;
+}) {
   const items = [
     { icon: 'home'    as const, label: '대시보드',    href: '/',            sub: '' },
-    { icon: 'leaf'    as const, label: '전체 재료',   href: '/ingredients', sub: '37개' },
+    { icon: 'leaf'    as const, label: '전체 재료',   href: '/ingredients', sub: ingSummary ? `${ingSummary.fridge + ingSummary.freezer + ingSummary.pantry}개` : '—' },
     { icon: 'sparkle' as const, label: '추천 레시피', href: '/recommend',   sub: '12개' },
-    { icon: 'book'    as const, label: '내 레시피',   href: '/recipes',     sub: '24개' },
+    { icon: 'book'    as const, label: '내 레시피',   href: '/recipes',     sub: recipeCount === null ? '—' : `${recipeCount}개` },
     { icon: 'cart'    as const, label: '장보기',      href: '/shopping',    sub: '5' },
     { icon: 'cal'     as const, label: '식사 달력',   href: '/calendar',    sub: '' },
   ];
@@ -365,6 +375,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const active = getActivePage(pathname);
 
   const [ingSummary, setIngSummary] = useState<IngredientSummary | null>(null);
+  const [recipeCount, setRecipeCount] = useState<number | null>(null);
 
   const fetchSummary = async () => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -381,29 +392,57 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     setIngSummary(sum);
   };
 
+  const fetchRecipeCount = async () => {
+    if (!isSupabaseEnabled || !supabase) return;
+    try {
+      const res = await supabase.from('recipes').select('id', { count: 'exact', head: true });
+      if (!res.error && typeof res.count === 'number') {
+        setRecipeCount(res.count);
+        return;
+      }
+
+      const fallback = await supabase.from('recipes').select('id').limit(5000);
+      if (!fallback.error) setRecipeCount((fallback.data ?? []).length);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     // eslint(react-hooks/set-state-in-effect): run async to avoid sync cascades
     Promise.resolve().then(() => fetchSummary());
+    Promise.resolve().then(() => fetchRecipeCount());
     const onChanged = () => fetchSummary();
     window.addEventListener('ingredients:changed', onChanged);
     return () => window.removeEventListener('ingredients:changed', onChanged);
   }, []);
 
   const navItems = useMemo(() => {
-    if (!ingSummary) return NAV_ITEMS;
     return NAV_ITEMS.map((it) => {
-      if (it.id !== 'ing' || !it.dropdown) return it;
-      const totalSub = `냉장 ${ingSummary.fridge} · 냉동 ${ingSummary.freezer} · 상온 ${ingSummary.pantry}`;
-      const soonSub = `D-7 이내 ${ingSummary.soon7}개`;
-      return {
-        ...it,
-        dropdown: [
-          { ...it.dropdown[0], sub: totalSub },
-          { ...it.dropdown[1], sub: soonSub },
-        ],
-      };
+      if (!it.dropdown) return it;
+
+      if (it.id === 'ing' && ingSummary) {
+        const totalSub = `냉장 ${ingSummary.fridge} · 냉동 ${ingSummary.freezer} · 상온 ${ingSummary.pantry}`;
+        const soonSub = `D-7 이내 ${ingSummary.soon7}개`;
+        return {
+          ...it,
+          dropdown: [
+            { ...it.dropdown[0], sub: totalSub },
+            { ...it.dropdown[1], sub: soonSub },
+          ],
+        };
+      }
+
+      if (it.id === 'rec' && typeof recipeCount === 'number') {
+        return {
+          ...it,
+          dropdown: it.dropdown.map((d) => (d.href === '/recipes' && d.label === '내 레시피' ? { ...d, sub: `저장한 레시피 ${recipeCount}개` } : d)),
+        };
+      }
+
+      return it;
     });
-  }, [ingSummary]);
+  }, [ingSummary, recipeCount]);
 
   return (
     <div className="app-root">
@@ -411,7 +450,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <MobileTopbar onMenu={() => setSidebarOpen(true)} />
       <main className="page-content">{children}</main>
       <MobileTabbar active={active} />
-      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} ingSummary={ingSummary} recipeCount={recipeCount} />
     </div>
   );
 }

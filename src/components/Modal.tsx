@@ -58,6 +58,10 @@ export default function Modal({
           maxWidth,
           padding: 16,
           boxShadow: 'var(--shadow-lg)',
+          maxHeight: 'calc(100vh - 96px)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -72,7 +76,9 @@ export default function Modal({
             <Icon name="close" size={12} /> 닫기
           </button>
         </div>
-        {children}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 6 }}>
+          {children}
+        </div>
       </div>
     </div>
   );

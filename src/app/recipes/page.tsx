@@ -397,7 +397,7 @@ export default function RecipesPage() {
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>내 레시피</h1>
             <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
-              저장한 레시피 24개. YouTube 링크나 직접 입력으로 추가할 수 있어요.
+              저장한 레시피 {recipes.length}개. YouTube 링크나 직접 입력으로 추가할 수 있어요.
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -539,6 +539,7 @@ function Field({
 
 function inputStyle(): React.CSSProperties {
   return {
+    width: '100%',
     height: 38,
     border: '0.5px solid var(--border)',
     borderRadius: 10,
@@ -565,9 +566,6 @@ function RecipeForm({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const ingScroll = form.ingredients.length >= 5;
-  const stepScroll = form.steps.length >= 5;
-
   const [isInvOpen, setIsInvOpen] = useState(false);
   const [invLoading, setInvLoading] = useState(false);
   const [invErr, setInvErr] = useState<string | null>(null);
@@ -652,7 +650,13 @@ function RecipeForm({
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px', gap: 10 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 10,
+        }}
+      >
         <Field label="제목">
           <input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} style={inputStyle()} />
         </Field>
@@ -680,7 +684,14 @@ function RecipeForm({
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 10,
+          marginTop: 10,
+        }}
+      >
         <Field label="YouTube 링크(옵션)">
           <input
             value={form.youtubeUrl ?? ''}
@@ -721,58 +732,63 @@ function RecipeForm({
           </button>
         </div>
         <div className="card" style={{ padding: 12 }}>
-          <div
-            style={{
-              maxHeight: ingScroll ? 38 * 5 + 8 * 4 : undefined,
-              overflowY: ingScroll ? 'auto' : undefined,
-              paddingRight: ingScroll ? 6 : undefined,
-            }}
-          >
-            {form.ingredients.map((it, idx) => (
-              <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 120px 28px', gap: 8, marginTop: idx === 0 ? 0 : 8 }}>
-                <input
-                  value={it.name}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, name: e.target.value } : x)),
-                    }))
-                  }
-                  placeholder="재료명"
-                  style={inputStyle()}
-                />
-                <input
-                  value={it.qtyText}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, qtyText: e.target.value } : x)),
-                    }))
-                  }
-                  placeholder="수량(텍스트)"
-                  style={inputStyle()}
-                />
-                <input
-                  value={it.unit}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, unit: e.target.value } : x)),
-                    }))
-                  }
-                  placeholder="단위"
-                  style={inputStyle()}
-                />
-                <button
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, ingredients: p.ingredients.filter((_, i) => i !== idx) }))}
-                  style={{ width: 28, height: 38, border: 'none', background: 'transparent', color: 'var(--text-tertiary)' }}
-                  title="삭제"
+          <div style={{ overflowX: 'hidden' }}>
+            <div className="recipe-ing-grid">
+              {form.ingredients.map((it, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) minmax(90px, 0.35fr) minmax(70px, 0.25fr) 28px',
+                    gap: 8,
+                    minWidth: 0,
+                    alignItems: 'center',
+                  }}
                 >
-                  <Icon name="close" size={13} />
-                </button>
-              </div>
-            ))}
+                  <input
+                    value={it.name}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, name: e.target.value } : x)),
+                      }))
+                    }
+                    placeholder="재료명"
+                    style={{ ...inputStyle(), minWidth: 0 }}
+                  />
+                  <input
+                    value={it.qtyText}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, qtyText: e.target.value } : x)),
+                      }))
+                    }
+                    placeholder="수량"
+                    style={{ ...inputStyle(), minWidth: 0 }}
+                  />
+                  <input
+                    value={it.unit}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        ingredients: p.ingredients.map((x, i) => (i === idx ? { ...x, unit: e.target.value } : x)),
+                      }))
+                    }
+                    placeholder="단위"
+                    style={{ ...inputStyle(), minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, ingredients: p.ingredients.filter((_, i) => i !== idx) }))}
+                    style={{ width: 28, height: 38, border: 'none', background: 'transparent', color: 'var(--text-tertiary)' }}
+                    title="삭제"
+                  >
+                    <Icon name="close" size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -791,13 +807,7 @@ function RecipeForm({
           </button>
         </div>
         <div className="card" style={{ padding: 12 }}>
-          <div
-            style={{
-              maxHeight: stepScroll ? 380 : undefined,
-              overflowY: stepScroll ? 'auto' : undefined,
-              paddingRight: stepScroll ? 6 : undefined,
-            }}
-          >
+          <div>
             {form.steps.map((st, idx) => (
               <div key={idx} style={{ display: 'flex', gap: 8, marginTop: idx === 0 ? 0 : 8, alignItems: 'flex-start' }}>
                 <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--surface-2)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--text-tertiary)', marginTop: 6 }}>
@@ -965,7 +975,7 @@ function RecipeView({
 
       <div className="card" style={{ padding: 12, marginBottom: 12 }}>
         <div className="h-section" style={{ marginBottom: 8 }}>재료 {detail.ingredients.filter((x) => x.name.trim()).length}개</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 6 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 6 }}>
           {detail.ingredients
             .filter((x) => x.name.trim())
             .map((x, idx) => (
