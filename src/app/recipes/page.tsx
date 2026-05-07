@@ -5,12 +5,15 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
+import RecipeCategoryIcon, { recipeTypeKey } from '@/components/recipes/RecipeCategoryIcon';
+import thumbStyles from '@/components/recipes/RecipeCategoryThumb.module.css';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 
 type DbRecipeRow = {
   id: string;
   title: string;
   youtube_url: string | null;
+  recipe_type?: string | null;
   memo: string | null;
   mode: 'light' | 'full' | string;
   kcal?: number | null;
@@ -38,6 +41,7 @@ type RecipeSummary = {
   id: string;
   title: string;
   youtubeUrl: string | null;
+  recipeType: string | null;
   memo: string | null;
   mode: 'light' | 'full';
   kcal?: number | null;
@@ -57,8 +61,14 @@ function isMissingColumnError(e: unknown): boolean {
   if (!e || typeof e !== 'object') return false;
   const any = e as { code?: unknown; message?: unknown };
   if (any.code === '42703') return true;
+  // PostgREST schema cache / missing column
+  if (any.code === 'PGRST204') return true;
   const msg = typeof any.message === 'string' ? any.message : '';
-  return /column .* does not exist/i.test(msg) || /undefined column/i.test(msg);
+  return (
+    /column .* does not exist/i.test(msg) ||
+    /undefined column/i.test(msg) ||
+    /could not find the '.*' column of '.*' in the schema cache/i.test(msg)
+  );
 }
 
 function getErrMessage(e: unknown): string {
@@ -74,11 +84,19 @@ function getErrMessage(e: unknown): string {
   return extra ? `${msg} (${extra})` : msg;
 }
 
+function toSafeExternalUrl(raw: string | null): string | null {
+  const t = (raw ?? '').trim();
+  if (!t) return null;
+  if (/^https?:\/\//i.test(t)) return t;
+  return `https://${t}`;
+}
+
 function emptyDetail(): RecipeDetail {
   return {
     id: '',
     title: '',
     youtubeUrl: null,
+    recipeType: null,
     memo: null,
     mode: 'full',
     kcal: null,
@@ -104,7 +122,7 @@ export default function RecipesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [form, setForm] = useState<RecipeDetail>(() => emptyDetail());
   const [saving, setSaving] = useState(false);
-  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const [saveErr, setSaveErr] = useState<{ title?: string; recipeType?: string; general?: string } | null>(null);
 
   const fetchRecipes = async () => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -112,7 +130,7 @@ export default function RecipesPage() {
     try {
       const tryWithExtras = await supabase
         .from('recipes')
-        .select('id,title,youtube_url,memo,mode,kcal,servings,created_at')
+        .select('id,title,youtube_url,recipe_type,memo,mode,kcal,servings,created_at')
         .order('created_at', { ascending: false });
 
       const baseRes = !tryWithExtras.error
@@ -120,7 +138,7 @@ export default function RecipesPage() {
         : isMissingColumnError(tryWithExtras.error)
           ? await supabase
               .from('recipes')
-              .select('id,title,youtube_url,memo,mode,created_at')
+              .select('id,title,youtube_url,recipe_type,memo,mode,created_at')
               .order('created_at', { ascending: false })
           : tryWithExtras;
 
@@ -131,6 +149,7 @@ export default function RecipesPage() {
           id: r.id,
           title: r.title,
           youtubeUrl: r.youtube_url ?? null,
+          recipeType: r.recipe_type ?? null,
           memo: r.memo ?? null,
           mode: (r.mode as 'light' | 'full') ?? 'light',
           kcal: typeof r.kcal === 'number' ? r.kcal : null,
@@ -174,14 +193,14 @@ export default function RecipesPage() {
 
       const recipeRes = await supabase
         .from('recipes')
-        .select('id,title,youtube_url,memo,mode,kcal,servings,created_at')
+        .select('id,title,youtube_url,recipe_type,memo,mode,kcal,servings,created_at')
         .eq('id', id)
         .maybeSingle();
 
       const recipeBase = !recipeRes.error
         ? recipeRes
         : isMissingColumnError(recipeRes.error)
-          ? await supabase.from('recipes').select('id,title,youtube_url,memo,mode,created_at').eq('id', id).maybeSingle()
+          ? await supabase.from('recipes').select('id,title,youtube_url,recipe_type,memo,mode,created_at').eq('id', id).maybeSingle()
           : recipeRes;
 
       if (recipeBase.error) throw recipeBase.error;
@@ -211,6 +230,7 @@ export default function RecipesPage() {
         id: r.id,
         title: r.title,
         youtubeUrl: r.youtube_url ?? null,
+        recipeType: r.recipe_type ?? null,
         memo: r.memo ?? null,
         mode: (r.mode as 'light' | 'full') ?? 'light',
         kcal: typeof r.kcal === 'number' ? r.kcal : null,
@@ -232,19 +252,24 @@ export default function RecipesPage() {
     const base: Record<string, unknown> = {
       title: d.title.trim(),
       youtube_url: d.youtubeUrl?.trim() || null,
+      recipe_type: d.recipeType?.trim() || null,
       memo: d.memo?.trim() || null,
       mode: d.mode,
       updated_at: new Date().toISOString(),
     };
-    if (typeof d.kcal === 'number') base.kcal = d.kcal;
-    if (typeof d.servings === 'number') base.servings = d.servings;
+    // kcal/servings는 입력을 지우면 null로 저장되도록 항상 포함
+    base.kcal = typeof d.kcal === 'number' ? d.kcal : null;
+    base.servings = typeof d.servings === 'number' ? d.servings : null;
     return base;
   };
 
   const saveNewRecipe = async () => {
     if (!isSupabaseEnabled || !supabase) return;
-    if (!form.title.trim()) {
-      setSaveErr('제목을 입력해 주세요.');
+    const nextErr: { title?: string; recipeType?: string } = {};
+    if (!form.title.trim()) nextErr.title = '제목을 입력해 주세요.';
+    if (!form.recipeType?.trim()) nextErr.recipeType = '레시피 종류를 선택해 주세요.';
+    if (nextErr.title || nextErr.recipeType) {
+      setSaveErr(nextErr);
       return;
     }
     setSaving(true);
@@ -264,8 +289,11 @@ export default function RecipesPage() {
               .insert({
                 title: form.title.trim(),
                 youtube_url: form.youtubeUrl?.trim() || null,
+                recipe_type: form.recipeType?.trim() || null,
                 memo: form.memo?.trim() || null,
                 mode: form.mode,
+                kcal: typeof form.kcal === 'number' ? form.kcal : null,
+                servings: typeof form.servings === 'number' ? form.servings : null,
                 updated_at: new Date().toISOString(),
               })
               .select('id,title,youtube_url,memo,mode,created_at')
@@ -305,7 +333,7 @@ export default function RecipesPage() {
       await fetchRecipes();
     } catch (e: unknown) {
       // 부분 실패 시 레시피 본문만 남는 걸 피하기 위해 가능하면 정리
-      setSaveErr(getErrMessage(e));
+      setSaveErr({ general: getErrMessage(e) });
     } finally {
       setSaving(false);
     }
@@ -314,8 +342,11 @@ export default function RecipesPage() {
   const saveEditRecipe = async () => {
     if (!isSupabaseEnabled || !supabase) return;
     if (!form.id) return;
-    if (!form.title.trim()) {
-      setSaveErr('제목을 입력해 주세요.');
+    const nextErr: { title?: string; recipeType?: string } = {};
+    if (!form.title.trim()) nextErr.title = '제목을 입력해 주세요.';
+    if (!form.recipeType?.trim()) nextErr.recipeType = '레시피 종류를 선택해 주세요.';
+    if (nextErr.title || nextErr.recipeType) {
+      setSaveErr(nextErr);
       return;
     }
     setSaving(true);
@@ -376,7 +407,37 @@ export default function RecipesPage() {
       setViewId(null);
       await fetchRecipes();
     } catch (e: unknown) {
-      setSaveErr(getErrMessage(e));
+      setSaveErr({ general: getErrMessage(e) });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteRecipe = async (id: string) => {
+    if (!isSupabaseEnabled || !supabase) return;
+    const ok = window.confirm('이 레시피를 삭제할까요?');
+    if (!ok) return;
+
+    setSaving(true);
+    setSaveErr(null);
+    try {
+      // FK cascade가 없을 수도 있어 안전하게 자식부터 삭제
+      const [delIng, delSteps] = await Promise.all([
+        supabase.from('recipe_ingredients').delete().eq('recipe_id', id),
+        supabase.from('recipe_steps').delete().eq('recipe_id', id),
+      ]);
+      if (delIng.error && !isMissingColumnError(delIng.error)) throw delIng.error;
+      if (delSteps.error && !isMissingColumnError(delSteps.error)) throw delSteps.error;
+
+      const del = await supabase.from('recipes').delete().eq('id', id);
+      if (del.error) throw del.error;
+
+      setIsEditMode(false);
+      setViewDetail(null);
+      setViewId(null);
+      await fetchRecipes();
+    } catch (e: unknown) {
+      setSaveErr({ general: getErrMessage(e) });
     } finally {
       setSaving(false);
     }
@@ -431,6 +492,7 @@ export default function RecipesPage() {
           ) : null}
 
           {recipes.map(r => {
+            const typeKey = recipeTypeKey(r.recipeType);
             return (
               <div
                 key={r.id}
@@ -438,14 +500,20 @@ export default function RecipesPage() {
                 onClick={() => openView(r.id)}
                 style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
               >
-                <div className="placeholder-img" style={{ width: 84, height: 64, borderRadius: 8, flexShrink: 0 }}>thumb</div>
+                <div className={thumbStyles.thumb}>
+                  <RecipeCategoryIcon type={typeKey} size={typeKey === 'japanese' ? 60 : 44} />
+                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{r.title}</span>
-                    {r.youtubeUrl ? <Icon name="youtube" size={13} style={{ color: '#c44' }} /> : null}
+                    {r.youtubeUrl ? <Icon name="link" size={13} style={{ color: 'var(--text-tertiary)' }} /> : null}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', display: 'flex', gap: 12 }}>
-                    <span>{r.kcal ? `${r.kcal} kcal` : '칼로리 미입력'}{r.servings ? ` · ${r.servings}인분` : ''}</span>
+                    <span>
+                      {r.recipeType ? `${r.recipeType} · ` : ''}
+                      {r.kcal ? `${r.kcal} kcal` : '칼로리 미입력'}
+                      {r.servings ? ` · ${r.servings}인분` : ''}
+                    </span>
                   </div>
                 </div>
                 <button className="btn ghost sm" onClick={(e) => { e.stopPropagation(); openView(r.id); }}>보기</button>
@@ -481,7 +549,23 @@ export default function RecipesPage() {
 
       {/* Create / Edit modal */}
       {isCreateOpen ? (
-        <Modal title="레시피 추가" onClose={() => setIsCreateOpen(false)}>
+        <Modal
+          title="레시피 추가"
+          actions={
+            <>
+              <button
+                className="btn sm"
+                type="button"
+                onClick={saveNewRecipe}
+                disabled={saving}
+                style={{ opacity: saving ? 0.7 : 1 }}
+              >
+                <Icon name="check" size={13} /> {saving ? '저장 중…' : '저장'}
+              </button>
+            </>
+          }
+          onClose={() => setIsCreateOpen(false)}
+        >
           <RecipeForm
             form={form}
             setForm={setForm}
@@ -489,13 +573,52 @@ export default function RecipesPage() {
             error={saveErr}
             onCancel={() => setIsCreateOpen(false)}
             onSave={saveNewRecipe}
+            compactActions
           />
         </Modal>
       ) : null}
 
       {/* View / Edit modal */}
       {viewId ? (
-        <Modal title={isEditMode ? '레시피 수정' : '레시피 상세'} onClose={() => { setViewId(null); setViewDetail(null); setIsEditMode(false); }}>
+        <Modal
+          title={isEditMode ? '레시피 수정' : '레시피 상세'}
+          actions={
+            isEditMode ? (
+              <>
+                <button
+                  className="btn sm"
+                  type="button"
+                  onClick={saveEditRecipe}
+                  disabled={saving}
+                  style={{ opacity: saving ? 0.7 : 1 }}
+                >
+                  <Icon name="check" size={13} /> {saving ? '저장 중…' : '저장'}
+                </button>
+              </>
+            ) : viewDetail ? (
+              <>
+                <button
+                  className="btn ghost sm"
+                  type="button"
+                  onClick={() => deleteRecipe(viewDetail.id)}
+                  disabled={saving}
+                  style={{ opacity: saving ? 0.7 : 1 }}
+                  title="레시피 삭제"
+                >
+                  <Icon name="trash" size={13} /> 삭제
+                </button>
+                <button className="btn ghost sm" type="button" onClick={openEditFromView}>
+                  <Icon name="edit" size={12} /> 수정
+                </button>
+              </>
+            ) : null
+          }
+          onClose={() => {
+            setViewId(null);
+            setViewDetail(null);
+            setIsEditMode(false);
+          }}
+        >
           {viewLoading ? (
             <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>불러오는 중…</div>
           ) : viewErr ? (
@@ -511,6 +634,7 @@ export default function RecipesPage() {
                 error={saveErr}
                 onCancel={() => setIsEditMode(false)}
                 onSave={saveEditRecipe}
+                compactActions
               />
             ) : (
               <RecipeView detail={viewDetail} onEdit={openEditFromView} />
@@ -558,22 +682,45 @@ function RecipeForm({
   error,
   onCancel,
   onSave,
+  compactActions,
 }: {
   form: RecipeDetail;
   setForm: React.Dispatch<React.SetStateAction<RecipeDetail>>;
   saving: boolean;
-  error: string | null;
+  error: { title?: string; recipeType?: string; general?: string } | null;
   onCancel: () => void;
   onSave: () => void;
+  compactActions?: boolean;
 }) {
   const [isInvOpen, setIsInvOpen] = useState(false);
   const [invLoading, setInvLoading] = useState(false);
   const [invErr, setInvErr] = useState<string | null>(null);
   const [invItems, setInvItems] = useState<
-    { id: string; name: string; loc: 'fridge' | 'freezer' | 'pantry'; qty: string; category: string }[]
+    { id: string; name: string; loc: 'fridge' | 'freezer' | 'pantry'; qtyText: string; unit: string; category: string }[]
   >([]);
   const [invQ, setInvQ] = useState('');
   const [invSelected, setInvSelected] = useState<Set<string>>(new Set());
+
+  const parseQtyUnit = (raw: string): { qtyText: string; unit: string } => {
+    const t = (raw ?? '').trim();
+    if (!t) return { qtyText: '', unit: '' };
+
+    // "40개", "1.5kg" 같이 붙어있는 패턴
+    const m = t.match(/^(\d+(?:\.\d+)?)(.*)$/);
+    if (m) {
+      const qtyText = m[1] ?? '';
+      const unit = (m[2] ?? '').trim();
+      return { qtyText, unit };
+    }
+
+    // "1 동", "40 개" 같이 공백으로 구분된 패턴
+    const parts = t.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2 && /^\d+(?:\.\d+)?$/.test(parts[0])) {
+      return { qtyText: parts[0], unit: parts.slice(1).join(' ') };
+    }
+
+    return { qtyText: t, unit: '' };
+  };
 
   const openInventory = async () => {
     setIsInvOpen(true);
@@ -588,21 +735,50 @@ function RecipeForm({
 
     setInvLoading(true);
     try {
+      // v_ingredients는 qty(텍스트)만 있어서 quantity/unit 분리를 위해 ingredient_items에서 직접 조회
       const res = await supabase
-        .from('v_ingredients')
-        .select('id,name,loc,qty,category,created_at')
+        .from('ingredient_items')
+        .select('id,loc,qty_text,quantity,unit,created_at,ingredient_defs(name,category_id,categories(name))')
         .order('created_at', { ascending: false })
         .limit(400);
       if (res.error) throw res.error;
-      const rows = (res.data ?? []) as { id: string; name: string; loc: 'fridge' | 'freezer' | 'pantry'; qty: string | null; category: string | null }[];
+      const rows = (res.data ?? []) as unknown as {
+        id: string;
+        loc: 'fridge' | 'freezer' | 'pantry';
+        qty_text: string | null;
+        quantity: number | null;
+        unit: string | null;
+        ingredient_defs:
+          | {
+              name?: string | null;
+              categories?: { name?: string | null } | { name?: string | null }[] | null;
+            }
+          | {
+              name?: string | null;
+              categories?: { name?: string | null } | { name?: string | null }[] | null;
+            }[]
+          | null;
+      }[];
       setInvItems(
-        rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          loc: r.loc,
-          qty: r.qty ?? '',
-          category: r.category ?? '기타',
-        })),
+        rows.map((r) => {
+          const def = Array.isArray(r.ingredient_defs) ? r.ingredient_defs[0] : r.ingredient_defs;
+          const cat = def?.categories;
+          const catName = Array.isArray(cat) ? cat[0]?.name : cat?.name;
+          return {
+            id: r.id,
+            name: def?.name ?? '',
+            loc: r.loc,
+            qtyText:
+              typeof r.quantity === 'number'
+                ? String(r.quantity)
+                : parseQtyUnit(r.qty_text ?? '').qtyText,
+            unit:
+              typeof r.unit === 'string' && r.unit.trim()
+                ? r.unit.trim()
+                : parseQtyUnit(r.qty_text ?? '').unit,
+            category: catName ?? '기타',
+          };
+        }),
       );
     } catch (e: unknown) {
       setInvErr(getErrMessage(e));
@@ -624,8 +800,8 @@ function RecipeForm({
       const toAdd = sel
         .map((s) => ({
           name: s.name,
-          qtyText: s.qty,
-          unit: '',
+          qtyText: s.qtyText,
+          unit: s.unit,
         }))
         .filter((x) => x.name.trim() && !existing.has(x.name.trim()));
 
@@ -659,6 +835,24 @@ function RecipeForm({
       >
         <Field label="제목">
           <input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} style={inputStyle()} />
+          {error?.title ? <div style={{ fontSize: 11.5, color: '#b95436' }}>{error.title}</div> : null}
+        </Field>
+        <Field label="종류">
+          <select
+            value={form.recipeType ?? ''}
+            onChange={(e) => setForm((p) => ({ ...p, recipeType: e.target.value || null }))}
+            style={inputStyle()}
+          >
+            <option value="">선택 안 함</option>
+            <option value="한식">한식</option>
+            <option value="중식">중식</option>
+            <option value="일식">일식</option>
+            <option value="양식">양식</option>
+            <option value="디저트">디저트</option>
+            <option value="간편식">간편식</option>
+            <option value="기타">기타</option>
+          </select>
+          {error?.recipeType ? <div style={{ fontSize: 11.5, color: '#b95436' }}>{error.recipeType}</div> : null}
         </Field>
         <Field label="예상 칼로리(kcal)">
           <input
@@ -849,20 +1043,22 @@ function RecipeForm({
         </div>
       </div>
 
-      {error ? (
+      {error?.general ? (
         <div className="card" style={{ padding: 12, marginTop: 12 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>저장 실패: {error}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{error.general}</div>
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
-        <button className="btn ghost" type="button" onClick={onCancel}>
-          취소
-        </button>
-        <button className="btn" type="button" onClick={onSave} disabled={saving} style={{ opacity: saving ? 0.7 : 1 }}>
-          <Icon name="check" size={13} /> {saving ? '저장 중…' : '저장'}
-        </button>
-      </div>
+      {!compactActions ? (
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
+          <button className="btn ghost" type="button" onClick={onCancel}>
+            취소
+          </button>
+          <button className="btn" type="button" onClick={onSave} disabled={saving} style={{ opacity: saving ? 0.7 : 1 }}>
+            <Icon name="check" size={13} /> {saving ? '저장 중…' : '저장'}
+          </button>
+        </div>
+      ) : null}
 
       {isInvOpen ? (
         <Modal title="나의 재료에서 가져오기" maxWidth={720} onClose={() => setIsInvOpen(false)}>
@@ -924,7 +1120,7 @@ function RecipeForm({
                         {it.name}
                       </div>
                       <div style={{ marginTop: 2, fontSize: 11, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {it.category}{it.qty ? ` · ${it.qty}` : ''}
+                        {it.category}{[it.qtyText, it.unit].filter(Boolean).join(' ') ? ` · ${[it.qtyText, it.unit].filter(Boolean).join(' ')}` : ''}
                       </div>
                     </div>
                   </div>
@@ -954,18 +1150,29 @@ function RecipeView({
   detail: RecipeDetail;
   onEdit: () => void;
 }) {
+  const ytUrl = toSafeExternalUrl(detail.youtubeUrl);
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
         <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>{detail.title}</div>
-        {detail.youtubeUrl ? <Icon name="youtube" size={15} style={{ color: '#c44' }} /> : null}
+        {ytUrl ? (
+          <a
+            href={ytUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="pill"
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, height: 26 }}
+            title="링크 열기"
+          >
+            <Icon name="link" size={13} style={{ color: 'var(--text-tertiary)' }} /> 링크 열기
+          </a>
+        ) : null}
         <div style={{ flex: 1 }} />
-        <button className="btn ghost sm" type="button" onClick={onEdit}>
-          <Icon name="edit" size={12} /> 수정
-        </button>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>
-        {detail.kcal ? `${detail.kcal} kcal` : '칼로리 미입력'}{detail.servings ? ` · ${detail.servings}인분` : ''}
+        {detail.recipeType ? `${detail.recipeType} · ` : ''}
+        {detail.kcal ? `${detail.kcal} kcal` : '칼로리 미입력'}
+        {detail.servings ? ` · ${detail.servings}인분` : ''}
       </div>
       {detail.memo ? (
         <div className="card" style={{ padding: 12, marginBottom: 12 }}>

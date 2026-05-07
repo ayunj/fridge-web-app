@@ -15,6 +15,9 @@ type DbIngredientRow = {
   name: string;
   loc: Loc;
   qty: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  qty_text?: string | null;
   category: string | null;
   expires_at: string | null; // YYYY-MM-DD
   note?: string | null;
@@ -58,6 +61,20 @@ export default function IngredientsPage() {
   const [quickAdding, setQuickAdding] = useState(false);
   const [quickAddErr, setQuickAddErr] = useState<string | null>(null);
   const [localAdds, setLocalAdds] = useState<ViewItem[]>([]);
+  const LOCAL_ADDS_KEY = 'ingredients.localAdds.v1';
+
+  const isViewItem = (x: unknown): x is ViewItem => {
+    if (!x || typeof x !== 'object') return false;
+    const r = x as Record<string, unknown>;
+    return (
+      typeof r.id === 'string' &&
+      typeof r.name === 'string' &&
+      (r.loc === 'fridge' || r.loc === 'freezer' || r.loc === 'pantry') &&
+      typeof r.qty === 'string' &&
+      typeof r.cat === 'string' &&
+      typeof r.d === 'number'
+    );
+  };
 
   const FILTER_STORE_KEY = 'ingredients.filters.v1';
   const initialFilters = useMemo(() => {
@@ -113,6 +130,21 @@ export default function IngredientsPage() {
     window.localStorage.setItem(FILTER_STORE_KEY, JSON.stringify(payload));
   }, [filterKey, sortKey, hideNoExpiry, selectedCatsArr]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(LOCAL_ADDS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return;
+      const next = parsed.filter(isViewItem).slice(0, 500);
+      // eslint(react-hooks/set-state-in-effect): async to avoid sync cascades
+      Promise.resolve().then(() => setLocalAdds(next));
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const fetchRows = async () => {
     if (!isSupabaseEnabled || !supabase) return;
     const tryWithNote = await supabase
@@ -140,35 +172,50 @@ export default function IngredientsPage() {
 
     const baseRows = (baseRes.data ?? []) as DbIngredientRow[];
 
-    // v_ingredients에 note가 없더라도 카드에서 비고를 보여주기 위해
-    // ingredient_items에서 id->note를 한 번 더 가져와 병합한다.
-    const hasNoteInView = baseRows.some((r) => typeof r.note !== 'undefined');
-    if (hasNoteInView) {
-      setRows(baseRows);
-      return;
-    }
-
     try {
       const ids = baseRows.map((r) => r.id).filter(Boolean);
       if (ids.length === 0) {
         setRows(baseRows);
         return;
       }
-      const notesRes = await supabase.from('ingredient_items').select('id,note').in('id', ids);
-      if (notesRes.error) {
-        // note 컬럼이 없거나 RLS 등으로 못 가져와도 목록은 보여준다
+      const itemsRes = await supabase.from('ingredient_items').select('id,note,qty_text,quantity,unit').in('id', ids);
+      if (itemsRes.error) {
+        // note/quantity/unit 컬럼이 없거나 RLS 등으로 못 가져와도 목록은 보여준다
         setRows(baseRows);
         return;
       }
-      const map = new Map<string, string | null>();
-      for (const n of (notesRes.data ?? []) as { id: string; note?: string | null }[]) {
-        map.set(n.id, n.note ?? null);
+
+      const map = new Map<string, { note?: string | null; qty_text?: string | null; quantity?: number | null; unit?: string | null }>();
+      for (const it of (itemsRes.data ?? []) as { id: string; note?: string | null; qty_text?: string | null; quantity?: number | null; unit?: string | null }[]) {
+        map.set(it.id, {
+          note: typeof it.note === 'undefined' ? null : it.note ?? null,
+          qty_text: typeof it.qty_text === 'undefined' ? null : it.qty_text ?? null,
+          quantity: typeof it.quantity === 'number' ? it.quantity : null,
+          unit: typeof it.unit === 'string' ? it.unit : it.unit ?? null,
+        });
       }
+
+      const toQty = (x: { qty: string | null; qty_text?: string | null; quantity?: number | null; unit?: string | null }) => {
+        if (typeof x.quantity === 'number') return [String(x.quantity), x.unit ?? ''].filter(Boolean).join(' ');
+        const qt = (x.qty_text ?? x.qty ?? '').trim();
+        return qt;
+      };
+
       setRows(
-        baseRows.map((r) => ({
-          ...r,
-          note: map.get(r.id) ?? null,
-        })),
+        baseRows.map((r) => {
+          const extra = map.get(r.id);
+          const merged = {
+            ...r,
+            note: extra?.note ?? r.note ?? null,
+            qty_text: extra?.qty_text ?? null,
+            quantity: typeof extra?.quantity === 'number' ? extra.quantity : null,
+            unit: extra?.unit ?? null,
+          };
+          return {
+            ...merged,
+            qty: toQty(merged) || null,
+          };
+        }),
       );
     } catch {
       setRows(baseRows);
@@ -302,8 +349,7 @@ export default function IngredientsPage() {
 
       if (!isSupabaseEnabled || !supabase) {
         const now = Date.now();
-        setLocalAdds((prev) => [
-          ...items.map((it, idx) => ({
+        const adds = items.map((it, idx) => ({
             id: `local-${now}-${idx}-${it.name}`,
             name: it.name,
             loc: it.loc,
@@ -312,9 +358,16 @@ export default function IngredientsPage() {
             d: 999,
             expiresAt: null,
             createdAt: new Date().toISOString(),
-          })),
-          ...prev,
-        ]);
+          }));
+        setLocalAdds((prev) => {
+          const next = [...adds, ...prev];
+          try {
+            window.localStorage.setItem(LOCAL_ADDS_KEY, JSON.stringify(next.slice(0, 500)));
+          } catch {
+            // ignore
+          }
+          return next;
+        });
       } else {
         await upsertDefsAndInsertItems(items);
         window.dispatchEvent(new Event('ingredients:changed'));

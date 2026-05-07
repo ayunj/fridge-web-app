@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 
@@ -66,6 +66,15 @@ function DesktopNavbar({ active, open, onHover, items }: {
   onHover: (id: string | null) => void;
   items: typeof NAV_ITEMS;
 }) {
+  const router = useRouter();
+  const [q, setQ] = useState('');
+
+  const submit = () => {
+    const t = q.trim();
+    if (!t) return;
+    router.push(`/search?q=${encodeURIComponent(t)}`);
+  };
+
   return (
     <header className="desktop-navbar" style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -154,14 +163,42 @@ function DesktopNavbar({ active, open, onHover, items }: {
           color: 'var(--text-tertiary)',
         }}>
           <Icon name="search" size={13} />
-          <input placeholder="재료, 레시피 검색…" style={{
-            border: 'none', outline: 'none', background: 'transparent',
-            fontSize: 12, flex: 1, color: 'var(--text-primary)',
-          }} />
-          <span style={{
-            fontSize: 10, fontFamily: 'monospace', color: 'var(--text-tertiary)',
-            border: '0.5px solid var(--border-strong)', borderRadius: 4, padding: '1px 5px',
-          }}>⌘K</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submit();
+            }}
+            placeholder="재료, 레시피 검색…"
+            style={{
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontSize: 12,
+              flex: 1,
+              color: 'var(--text-primary)',
+              minWidth: 0,
+            }}
+          />
+          <button
+            type="button"
+            onClick={submit}
+            title="검색"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--text-tertiary)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              borderRadius: 6,
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="search" size={12} />
+          </button>
         </div>
         {/* Link styled as .btn — no <a><button> */}
         <Link href="/ingredients" className="btn" style={{ textDecoration: 'none' }}>
@@ -182,6 +219,7 @@ function DesktopNavbar({ active, open, onHover, items }: {
 
 // ── Mobile Top Bar ──────────────────────────────────────────
 function MobileTopbar({ onMenu }: { onMenu: () => void }) {
+  const router = useRouter();
   return (
     <header className="mobile-topbar" style={{
       height: 52, padding: '0 14px',
@@ -201,7 +239,7 @@ function MobileTopbar({ onMenu }: { onMenu: () => void }) {
         <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>나의 냉장고</span>
       </Link>
       <div style={{ flex: 1 }} />
-      <button style={{
+      <button onClick={() => router.push('/search')} style={{
         width: 32, height: 32, borderRadius: 8, border: 'none',
         background: 'transparent', color: 'var(--text-secondary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
