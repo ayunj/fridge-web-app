@@ -96,6 +96,9 @@ textarea::placeholder {
   letter-spacing: 0.01em;
   background: var(--surface-2);
   color: var(--text-secondary);
+  white-space: nowrap;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .badge.ok     { background: #DAF1E5; color: #3F8A65; }
 .badge.warn   { background: #FBE7C2; color: #A86F1F; }
@@ -195,6 +198,142 @@ textarea::placeholder {
   }
 }
 
+/* Dashboard (mobile) */
+.dash-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dash-stat-head-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.dash-stat-label {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.recipe-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.recipe-card-meta-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.recipe-card-meta-item {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .dash-stat-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .recipe-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* Ingredients (mobile) */
+.ing-quickbar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ing-quickbar-locs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: #f7f6f3;
+  border-radius: 10px;
+  width: fit-content;
+}
+.ing-quickbar-locbtn {
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: none;
+}
+.ing-quickbar-locbtn[data-on="1"] {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.ing-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ing-card-head-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ing-card-loc {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+.ing-card-exp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 720px) {
+  .ing-quickbar-row {
+    flex-wrap: wrap;
+    padding: 4px 0;
+  }
+  .ing-quickbar-locs {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .ing-quickbar-locbtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .ing-quickbar-add {
+    order: 2;
+  }
+
+  .ing-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .ing-card-exp {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 .lnk {
   color: var(--text-primary);
   text-decoration: underline;
@@ -226,6 +365,331 @@ textarea::placeholder {
   background: var(--surface-2);
   color: var(--text-secondary);
   font-size: 11px;
+}
+
+/* ── Shopping page (based on docs/shopping_list_note_below.html) ───────── */
+.shop-page {
+  width: 100%;
+  padding: 24px;
+  padding-top: 20px;
+}
+
+.shop-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.shop-subtitle {
+  margin: 0 0 18px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.shop-addGrid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 8px;
+  row-gap: 8px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.shop-addHead {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 2px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  min-width: 0;
+}
+
+.shop-addLabel {
+  flex: 1;
+  padding: 0 14px;
+}
+
+.shop-addDiv {
+  width: 0.5px;
+  height: 14px;
+  background: var(--border-strong);
+}
+
+.shop-addRow {
+  display: none;
+}
+
+.shop-inputWrap {
+  flex: 1;
+  display: flex;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.shop-inputWrap:focus-within {
+  border-color: rgba(60, 46, 34, 0.28);
+}
+
+.shop-inp {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 13px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.shop-inpDiv {
+  width: 0.5px;
+  background: var(--border-strong);
+}
+
+.shop-addBtn {
+  padding: 10px 20px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .shop-page {
+    padding: 18px;
+    padding-top: 18px;
+  }
+
+  .shop-addGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-addBtn {
+    width: 100%;
+  }
+}
+
+.shop-countRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.shop-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.shop-delBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: none;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+}
+
+.shop-delBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shop-doneToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.shop-doneToggle:hover {
+  background: var(--surface-2);
+}
+
+.shop-doneToggleRight {
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shop-item {
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.shop-itemRow {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.shop-item:hover > .shop-itemRow {
+  background: var(--surface-2);
+}
+
+.shop-item.editing > .shop-itemRow {
+  background: var(--surface-2);
+}
+
+.shop-cb {
+  width: 18px;
+  height: 18px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+}
+
+.shop-cb.on {
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+}
+
+.shop-itemText {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-itemName {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.shop-itemNote {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shop-recipeTag {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.shop-xBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.shop-editPanel {
+  display: none;
+  padding: 10px 16px 14px;
+  border-top: 0.5px solid var(--border-strong);
+  background: var(--surface-2);
+}
+
+.shop-editPanel.open {
+  display: block;
+}
+
+.shop-editFields {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.shop-editInp {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.shop-editInp:focus {
+  border-color: rgba(60, 46, 34, 0.28);
+}
+
+.shop-editActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.shop-saveBtn {
+  padding: 7px 16px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.shop-saveBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.shop-cancelBtn {
+  padding: 7px 12px;
+  background: none;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.shop-item.done .shop-itemName {
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.shop-item.done .shop-itemNote {
+  opacity: 0.4;
+}
+
+.shop-empty {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 18px 16px;
+  font-size: 12px;
 }
 
 /* ── App shell ──────────────────────────────────────────── */

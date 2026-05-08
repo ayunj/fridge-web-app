@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Icon from './Icon';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
+import { SHOPPING_KEY, shoppingSeedItems, type StoredShoppingRow } from '@/lib/shopping-local';
 
 type IngredientSummary = {
   fridge: number;
@@ -307,18 +308,20 @@ function MobileSidebar({
   onClose,
   ingSummary,
   recipeCount,
+  shoppingCount,
 }: {
   open: boolean;
   onClose: () => void;
   ingSummary: IngredientSummary | null;
   recipeCount: number | null;
+  shoppingCount: number | null;
 }) {
   const items = [
     { icon: 'home'    as const, label: '대시보드',    href: '/',            sub: '' },
     { icon: 'leaf'    as const, label: '전체 재료',   href: '/ingredients', sub: ingSummary ? `${ingSummary.fridge + ingSummary.freezer + ingSummary.pantry}개` : '—' },
-    { icon: 'sparkle' as const, label: '추천 레시피', href: '/recommend',   sub: '12개' },
+    { icon: 'sparkle' as const, label: '추천 레시피', href: '/recommend',   sub: '—' },
     { icon: 'book'    as const, label: '내 레시피',   href: '/recipes',     sub: recipeCount === null ? '—' : `${recipeCount}개` },
-    { icon: 'cart'    as const, label: '장보기',      href: '/shopping',    sub: '5' },
+    { icon: 'cart'    as const, label: '장보기',      href: '/shopping',    sub: shoppingCount === null ? '—' : `${shoppingCount}` },
     { icon: 'cal'     as const, label: '식사 달력',   href: '/calendar',    sub: '' },
   ];
   return (
@@ -363,13 +366,17 @@ function MobileSidebar({
           padding: 8, background: 'rgba(255,255,255,0.04)',
           borderRadius: 10, marginBottom: 16,
         }}>
-          {[{ v: 18, l: '냉장', cls: 'fridge' }, { v: 7, l: '냉동', cls: 'freezer' }, { v: 12, l: '상온', cls: 'pantry' }].map(s => (
+          {[
+            { v: ingSummary?.fridge ?? null,  l: '냉장', cls: 'fridge' },
+            { v: ingSummary?.freezer ?? null, l: '냉동', cls: 'freezer' },
+            { v: ingSummary?.pantry ?? null,  l: '상온', cls: 'pantry' },
+          ].map(s => (
             <div key={s.l} style={{ textAlign: 'center', padding: '4px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <span className={`dot ${s.cls}`} style={{ width: 5, height: 5 }} />
                 <span style={{ fontSize: 9.5, color: 'var(--text-on-dark-dim)' }}>{s.l}</span>
               </div>
-              <div className="num-display" style={{ fontSize: 18, fontWeight: 500, marginTop: 1 }}>{s.v}</div>
+              <div className="num-display" style={{ fontSize: 18, fontWeight: 500, marginTop: 1 }}>{s.v === null ? '—' : s.v}</div>
             </div>
           ))}
         </div>
@@ -398,7 +405,8 @@ function MobileSidebar({
           color: 'rgba(211,209,199,0.78)', lineHeight: 1.45,
         }}>
           <div style={{ fontSize: 10.5, color: 'rgba(211,209,199,0.55)', marginBottom: 3 }}>오늘의 한 줄</div>
-          유통기한 임박 재료 <span style={{ color: 'var(--text-on-dark)' }}>3개</span> · 두부 김치찌개 어때요?
+          유통기한 임박 재료{' '}
+          <span style={{ color: 'var(--text-on-dark)' }}>{ingSummary ? `${ingSummary.soon7}개` : '—'}</span> · 두부 김치찌개 어때요?
         </div>
       </aside>
     </>
@@ -414,6 +422,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const [ingSummary, setIngSummary] = useState<IngredientSummary | null>(null);
   const [recipeCount, setRecipeCount] = useState<number | null>(null);
+  const [shoppingCount, setShoppingCount] = useState<number | null>(null);
 
   const fetchSummary = async () => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -446,13 +455,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const fetchShoppingCount = async () => {
+    try {
+      if (!isSupabaseEnabled || !supabase) {
+        if (typeof window === 'undefined') return;
+        const raw = window.localStorage.getItem(SHOPPING_KEY);
+        const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+        const rows: StoredShoppingRow[] = Array.isArray(parsed) ? (parsed as StoredShoppingRow[]) : shoppingSeedItems();
+        const undone = rows.filter((r) => r && typeof r === 'object' && !(r as { done?: unknown }).done);
+        setShoppingCount(undone.length);
+        return;
+      }
+
+      const res = await supabase.from('shopping_items').select('id', { count: 'exact', head: true }).eq('checked', false);
+      if (!res.error && typeof res.count === 'number') {
+        setShoppingCount(res.count);
+        return;
+      }
+      const fallback = await supabase.from('shopping_items').select('id,checked').limit(5000);
+      if (!fallback.error) {
+        const undone = (fallback.data ?? []).filter((r) => (r as { checked?: unknown }).checked === false);
+        setShoppingCount(undone.length);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     // eslint(react-hooks/set-state-in-effect): run async to avoid sync cascades
     Promise.resolve().then(() => fetchSummary());
     Promise.resolve().then(() => fetchRecipeCount());
+    Promise.resolve().then(() => fetchShoppingCount());
     const onChanged = () => fetchSummary();
     window.addEventListener('ingredients:changed', onChanged);
-    return () => window.removeEventListener('ingredients:changed', onChanged);
+    const onShopChanged = () => fetchShoppingCount();
+    window.addEventListener('shopping:changed', onShopChanged);
+    window.addEventListener('storage', onShopChanged);
+    return () => {
+      window.removeEventListener('ingredients:changed', onChanged);
+      window.removeEventListener('shopping:changed', onShopChanged);
+      window.removeEventListener('storage', onShopChanged);
+    };
   }, []);
 
   const navItems = useMemo(() => {
@@ -488,7 +532,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <MobileTopbar onMenu={() => setSidebarOpen(true)} />
       <main className="page-content">{children}</main>
       <MobileTabbar active={active} />
-      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} ingSummary={ingSummary} recipeCount={recipeCount} />
+      <MobileSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        ingSummary={ingSummary}
+        recipeCount={recipeCount}
+        shoppingCount={shoppingCount}
+      />
     </div>
   );
 }

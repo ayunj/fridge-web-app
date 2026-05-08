@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/Icon';
-import { SHOPPING as INITIAL_SHOPPING } from '@/lib/data';
+import { shoppingSeedItems, SHOPPING_KEY } from '@/lib/shopping-local';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -18,7 +18,6 @@ type LocalIngredientAdd = {
   createdAt: string;
 };
 
-const SHOPPING_KEY = 'shopping.items.v1';
 const LOCAL_ING_ADDS_KEY = 'ingredients.localAdds.v1';
 
 type ShoppingViewItem = {
@@ -29,13 +28,21 @@ type ShoppingViewItem = {
   memo?: string | null;
 };
 
+function norm(s: string) {
+  return (s ?? '').trim();
+}
+
+function makeLocalId(prefix = 's') {
+  return `${prefix}${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function loadShopping() {
-  if (typeof window === 'undefined') return INITIAL_SHOPPING;
+  if (typeof window === 'undefined') return shoppingSeedItems();
   try {
     const raw = window.localStorage.getItem(SHOPPING_KEY);
-    if (!raw) return INITIAL_SHOPPING;
+    if (!raw) return shoppingSeedItems();
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return INITIAL_SHOPPING;
+    if (!Array.isArray(parsed)) return shoppingSeedItems();
     return parsed.filter((x): x is ShoppingViewItem => {
       if (!x || typeof x !== 'object') return false;
       const r = x as Record<string, unknown>;
@@ -48,7 +55,7 @@ function loadShopping() {
       );
     });
   } catch {
-    return INITIAL_SHOPPING;
+    return shoppingSeedItems();
   }
 }
 
@@ -99,6 +106,10 @@ export default function ShoppingPage() {
   const sb = supabase;
   const usingDb = isSupabaseEnabled && sb !== null;
   const [items, setItems] = useState<ShoppingViewItem[]>(() => (usingDb ? [] : loadShopping()));
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editMemo, setEditMemo] = useState('');
+  const [doneOpen, setDoneOpen] = useState(false);
 
   type DbShoppingRow = {
     id: string;
@@ -140,6 +151,52 @@ export default function ShoppingPage() {
     // eslint(react-hooks/set-state-in-effect): run async to avoid sync cascades
     Promise.resolve().then(() => fetchDb(sb));
   }, [usingDb, sb]);
+
+  const beginEdit = (id: string) => {
+    setEditingId((prev) => {
+      if (prev === id) {
+        setEditName('');
+        setEditMemo('');
+        return null;
+      }
+      const cur = items.find((x) => x.id === id);
+      setEditName(cur?.name ?? '');
+      setEditMemo(cur?.memo ?? '');
+      return id;
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName('');
+    setEditMemo('');
+  };
+
+  const saveEdit = (id: string) => {
+    const nextName = norm(editName);
+    const nextMemo = norm(editMemo) || null;
+    if (!nextName) return;
+
+    setItems((prev) => {
+      const next = prev.map((x) => (x.id === id ? { ...x, name: nextName, memo: nextMemo } : x));
+      if (!usingDb) saveShopping(next);
+      else {
+        if (!sb) return next;
+        Promise.resolve()
+          .then(async () => {
+            const u = await sb.from('shopping_items').update({ name: nextName, memo: nextMemo }).eq('id', id);
+            if (u.error) throw u.error;
+          })
+          .then(() => fetchDb(sb))
+          .catch(() => {
+            // best-effort
+          });
+      }
+      return next;
+    });
+
+    cancelEdit();
+  };
 
   const toggle = (id: string) =>
     setItems(prev => {
@@ -197,13 +254,55 @@ export default function ShoppingPage() {
       return next;
     });
 
+  const deleteOne = (id: string) =>
+    setItems((prev) => {
+      const next = prev.filter((x) => x.id !== id);
+      if (!usingDb) saveShopping(next);
+      else {
+        if (!sb) return next;
+        Promise.resolve()
+          .then(async () => {
+            const del = await sb.from('shopping_items').delete().eq('id', id);
+            if (del.error) throw del.error;
+          })
+          .then(() => fetchDb(sb))
+          .catch(() => {
+            // best-effort
+          });
+      }
+      if (editingId === id) cancelEdit();
+      return next;
+    });
+
+  const deleteDone = () =>
+    setItems((prev) => {
+      const next = prev.filter((s) => !s.done);
+      if (!usingDb) {
+        saveShopping(next);
+        return next;
+      }
+      if (!sb) return next;
+      const doneIds = prev.filter((s) => s.done).map((s) => s.id);
+      Promise.resolve()
+        .then(async () => {
+          if (doneIds.length === 0) return;
+          const del = await sb.from('shopping_items').delete().in('id', doneIds);
+          if (del.error) throw del.error;
+        })
+        .then(() => fetchDb(sb))
+        .catch(() => {
+          // best-effort
+        });
+      return next;
+    });
+
   const addItem = () => {
-    if (!input.trim()) return;
-    const name = input.trim();
-    const memo = inputMemo.trim() || null;
+    const name = norm(input);
+    const memo = norm(inputMemo) || null;
+    if (!name) return;
     if (!usingDb) {
       setItems(prev => {
-        const next = [...prev, { id: `s${Date.now()}`, name, from: '직접 추가', done: false, memo }];
+        const next = [...prev, { id: makeLocalId('s'), name, from: '직접 추가', done: false, memo }];
         saveShopping(next);
         return next;
       });
@@ -237,38 +336,9 @@ export default function ShoppingPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: 24, paddingTop: 20 }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 18 }}>
-          <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>장보기 목록</h1>
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
-              레시피에서 추가했거나 직접 입력한 항목들. 체크하면 자동으로 재료에 추가돼요.
-            </div>
-          </div>
-          <button className="btn ghost sm" onClick={() => setItems(prev => {
-            const next = prev.filter(s => !s.done);
-            if (!usingDb) {
-              saveShopping(next);
-              return next;
-            }
-            if (!sb) return next;
-            const doneIds = prev.filter((s) => s.done).map((s) => s.id);
-            Promise.resolve()
-              .then(async () => {
-                if (doneIds.length === 0) return;
-                const del = await sb.from('shopping_items').delete().in('id', doneIds);
-                if (del.error) throw del.error;
-              })
-              .then(() => fetchDb(sb))
-              .catch(() => {
-                // best-effort
-              });
-            return next;
-          })}>
-            <Icon name="trash" size={12} /> 완료 항목 삭제
-          </button>
-        </div>
+      <div className="shop-page">
+        <h1 className="shop-title">장보기 목록</h1>
+        <p className="shop-subtitle">레시피에서 추가됐거나 직접 입력한 항목들. 체크하면 자동으로 재료에 추가돼요.</p>
         {usingDb && dbErr ? (
           <div className="card" style={{ padding: '10px 12px', marginBottom: 14 }}>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>DB 오류: {dbErr}</div>
@@ -280,143 +350,225 @@ export default function ShoppingPage() {
         {/* loading banner intentionally hidden (no flicker on mutations) */}
 
         {/* Input */}
-        <div className="card" style={{ padding: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Icon name="plus" size={15} style={{ marginLeft: 10, color: 'var(--text-tertiary)' }} />
-          <input
-            placeholder="장보기 항목 직접 추가"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addItem()}
-            style={{ width: 800, maxWidth: '60%', height: 36, border: 'none', outline: 'none', background: 'transparent', fontSize: 13 }}
-          />
-          <input
-            placeholder="비고"
-            value={inputMemo}
-            onChange={(e) => setInputMemo(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addItem()}
-            style={{ flex: 1, height: 36, border: 'none', outline: 'none', background: 'transparent', fontSize: 12.5, color: 'var(--text-secondary)', minWidth: 200 }}
-          />
-          <button className="btn sm" style={{ marginRight: 4 }} onClick={addItem}>추가</button>
+        <div className="shop-addGrid">
+          <div className="shop-addHead" aria-hidden="true">
+            <span className="shop-addLabel">재료명</span>
+            <div className="shop-addDiv" aria-hidden="true" />
+            <span className="shop-addLabel">비고 (선택)</span>
+          </div>
+          <div aria-hidden="true" />
+
+          <div className="shop-inputWrap">
+            <input
+              className="shop-inp"
+              placeholder="두부"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            />
+            <div className="shop-inpDiv" aria-hidden="true" />
+            <input
+              className="shop-inp"
+              placeholder="단단한 걸로, 2모"
+              value={inputMemo}
+              onChange={(e) => setInputMemo(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            />
+          </div>
+          <button className="shop-addBtn" type="button" onClick={addItem}>
+            추가
+          </button>
         </div>
 
-        {/* Todo */}
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span className="h-section">구매 예정</span>
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{todo.length}</span>
-          </div>
-          <div className="card" style={{ padding: '4px 0' }}>
-            {todo.map((s, idx) => (
-              <div key={s.id} style={{ borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 16px',
-                  flexWrap: 'wrap',
-                }}>
-                  <span className="chk" onClick={() => toggle(s.id)} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13 }}>{s.name}</div>
-                    {s.memo ? (
-                      <div style={{ marginTop: 3, fontSize: 11.5, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {s.memo}
-                      </div>
-                    ) : null}
-                  </div>
-                  <span className="tag" style={{ fontSize: 10.5, flexShrink: 0 }}>
-                    {s.from === '직접 추가' ? s.from : `← ${s.from}`}
-                  </span>
+        <div className="shop-countRow">
+          <span className="shop-count">구매 예정 {todo.length}</span>
+          <button className="shop-delBtn" type="button" onClick={deleteDone} disabled={done.length === 0}>
+            <Icon name="trash" size={13} /> 완료 항목 삭제
+          </button>
+        </div>
+
+        <div className="shop-list">
+          {todo.map((s) => {
+            const isEditing = editingId === s.id;
+            return (
+              <div
+                key={s.id}
+                className={`shop-item${isEditing ? ' editing' : ''}`}
+                onClick={() => beginEdit(s.id)}
+              >
+                <div className="shop-itemRow">
                   <button
-                    onClick={() => setItems(prev => {
-                      const next = prev.filter(x => x.id !== s.id);
-                      if (!usingDb) saveShopping(next);
-                      else {
-                        if (!sb) return next;
-                        Promise.resolve()
-                          .then(async () => {
-                            const del = await sb.from('shopping_items').delete().eq('id', s.id);
-                            if (del.error) throw del.error;
-                          })
-                          .then(() => fetchDb(sb))
-                          .catch(() => {
-                            // best-effort
-                          });
-                      }
-                      return next;
-                    })}
-                    style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name="close" size={13} />
+                    type="button"
+                    className={`shop-cb${s.done ? ' on' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggle(s.id);
+                    }}
+                    aria-label={s.done ? '구매 취소' : '구매 완료'}
+                  >
+                    {s.done ? <Icon name="check" size={12} style={{ color: 'var(--btn-fg)' }} /> : null}
+                  </button>
+
+                  <div className="shop-itemText">
+                    <div className="shop-itemName">{s.name}</div>
+                    {s.memo ? <div className="shop-itemNote">{s.memo}</div> : null}
+                  </div>
+
+                  {s.from && s.from !== '직접 추가' ? <span className="shop-recipeTag">← {s.from}</span> : null}
+
+                  <button
+                    type="button"
+                    className="shop-xBtn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteOne(s.id);
+                    }}
+                    aria-label="삭제"
+                  >
+                    <Icon name="close" size={14} />
                   </button>
                 </div>
-              </div>
-            ))}
-            {todo.length === 0 && (
-              <div style={{ padding: '20px 16px', color: 'var(--text-tertiary)', fontSize: 12, textAlign: 'center' }}>
-                모든 항목을 구매했어요
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Done */}
-        {done.length > 0 && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span className="h-section">완료</span>
-              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{done.length}</span>
-            </div>
-            <div className="card" style={{ padding: '4px 0' }}>
-              {done.map((s, idx) => (
-                <div key={s.id} style={{ borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)', opacity: 0.5 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '10px 16px',
-                    flexWrap: 'wrap',
-                  }}>
-                    <span className="chk on" onClick={() => toggle(s.id)}>
-                      <Icon name="check" size={11} />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, textDecoration: 'line-through' }}>{s.name}</div>
-                      {s.memo ? (
-                        <div style={{ marginTop: 3, fontSize: 11.5, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {s.memo}
-                        </div>
-                      ) : null}
-                    </div>
-                    <span className="tag" style={{ fontSize: 10.5, flexShrink: 0 }}>
-                      {s.from === '직접 추가' ? s.from : `← ${s.from}`}
-                    </span>
-                    <button
-                      onClick={() => setItems(prev => {
-                        const next = prev.filter(x => x.id !== s.id);
-                        if (!usingDb) saveShopping(next);
-                        else {
-                          if (!sb) return next;
-                          Promise.resolve()
-                            .then(async () => {
-                              const del = await sb.from('shopping_items').delete().eq('id', s.id);
-                              if (del.error) throw del.error;
-                            })
-                            .then(() => fetchDb(sb))
-                            .catch(() => {
-                              // best-effort
-                            });
-                        }
-                        return next;
-                      })}
-                      style={{ width: 24, height: 24, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon name="close" size={13} />
+                <div className={`shop-editPanel${isEditing ? ' open' : ''}`}>
+                  <div className="shop-editFields" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      className="shop-editInp"
+                      placeholder="재료명"
+                      value={isEditing ? editName : s.name}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') cancelEdit();
+                        if (e.key === 'Enter') saveEdit(s.id);
+                      }}
+                    />
+                    <input
+                      className="shop-editInp"
+                      placeholder="비고"
+                      value={isEditing ? editMemo : s.memo ?? ''}
+                      onChange={(e) => setEditMemo(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') cancelEdit();
+                        if (e.key === 'Enter') saveEdit(s.id);
+                      }}
+                    />
+                  </div>
+                  <div className="shop-editActions" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="shop-cancelBtn" onClick={cancelEdit}>
+                      취소
+                    </button>
+                    <button type="button" className="shop-saveBtn" onClick={() => saveEdit(s.id)} disabled={!norm(editName)}>
+                      저장
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            );
+          })}
+
+          {todo.length === 0 ? <div className="shop-empty">모든 항목을 구매했어요</div> : null}
+        </div>
+
+        {done.length > 0 ? (
+          <>
+            <button
+              type="button"
+              className="shop-doneToggle"
+              onClick={() => setDoneOpen((p) => !p)}
+              aria-expanded={doneOpen}
+            >
+              <span className="shop-count">완료 {done.length}</span>
+              <span className="shop-doneToggleRight">
+                <Icon name={doneOpen ? 'chev-u' : 'chev-d'} size={14} />
+              </span>
+            </button>
+
+            {doneOpen ? (
+              <div className="shop-list">
+                {done.map((s) => {
+                  const isEditing = editingId === s.id;
+                  return (
+                    <div
+                      key={s.id}
+                      className={`shop-item done${isEditing ? ' editing' : ''}`}
+                      onClick={() => beginEdit(s.id)}
+                    >
+                      <div className="shop-itemRow">
+                        <button
+                          type="button"
+                          className={`shop-cb${s.done ? ' on' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggle(s.id);
+                          }}
+                          aria-label={s.done ? '구매 취소' : '구매 완료'}
+                        >
+                          {s.done ? <Icon name="check" size={12} style={{ color: 'var(--btn-fg)' }} /> : null}
+                        </button>
+
+                        <div className="shop-itemText">
+                          <div className="shop-itemName">{s.name}</div>
+                          {s.memo ? <div className="shop-itemNote">{s.memo}</div> : null}
+                        </div>
+
+                        {s.from && s.from !== '직접 추가' ? <span className="shop-recipeTag">← {s.from}</span> : null}
+
+                        <button
+                          type="button"
+                          className="shop-xBtn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteOne(s.id);
+                          }}
+                          aria-label="삭제"
+                        >
+                          <Icon name="close" size={14} />
+                        </button>
+                      </div>
+
+                      <div className={`shop-editPanel${isEditing ? ' open' : ''}`}>
+                        <div className="shop-editFields" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            className="shop-editInp"
+                            placeholder="재료명"
+                            value={isEditing ? editName : s.name}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') cancelEdit();
+                              if (e.key === 'Enter') saveEdit(s.id);
+                            }}
+                          />
+                          <input
+                            className="shop-editInp"
+                            placeholder="비고"
+                            value={isEditing ? editMemo : s.memo ?? ''}
+                            onChange={(e) => setEditMemo(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') cancelEdit();
+                              if (e.key === 'Enter') saveEdit(s.id);
+                            }}
+                          />
+                        </div>
+                        <div className="shop-editActions" onClick={(e) => e.stopPropagation()}>
+                          <button type="button" className="shop-cancelBtn" onClick={cancelEdit}>
+                            취소
+                          </button>
+                          <button
+                            type="button"
+                            className="shop-saveBtn"
+                            onClick={() => saveEdit(s.id)}
+                            disabled={!norm(editName)}
+                          >
+                            저장
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </>
+        ) : null}
       </div>
     </AppShell>
   );

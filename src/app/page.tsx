@@ -8,6 +8,7 @@ import { INGREDIENTS, RECIPES, SHOPPING, LOC_LABEL, LOC_TEMP, type Loc, dCount, 
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 import Modal from '@/components/Modal';
 import IngredientEditor from '@/app/ingredients/_components/IngredientEditor';
+import { SHOPPING_KEY, shoppingSeedItems, type StoredShoppingRow } from '@/lib/shopping-local';
 
 type DbIngredientRow = {
   id: string;
@@ -47,14 +48,16 @@ function RecipeCard({ r }: { r: typeof RECIPES[0] }) {
         )}
       </div>
       <div style={{ padding: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <div className="recipe-card-meta">
           <span className={`badge ${status.cls}`}>{status.text}</span>
-          <span style={{ fontSize: 10.5, color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Icon name="clock" size={11} /> {r.time}분
-          </span>
-          <span style={{ fontSize: 10.5, color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
-            <Icon name="flame" size={11} /> {r.kcal}kcal
-          </span>
+          <div className="recipe-card-meta-sub">
+            <span className="recipe-card-meta-item">
+              <Icon name="clock" size={11} /> {r.time}분
+            </span>
+            <span className="recipe-card-meta-item">
+              <Icon name="flame" size={11} /> {r.kcal}kcal
+            </span>
+          </div>
         </div>
         <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: '-0.01em' }}>{r.title}</div>
       </div>
@@ -67,6 +70,17 @@ export default function DashboardPage() {
   const [rows, setRows] = useState<DbIngredientRow[] | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [shoppingRows, setShoppingRows] = useState<StoredShoppingRow[]>(() => {
+    if (typeof window === 'undefined') return SHOPPING.slice(0, 200);
+    if (isSupabaseEnabled && supabase) return [];
+    try {
+      const raw = window.localStorage.getItem(SHOPPING_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+      return Array.isArray(parsed) ? (parsed as StoredShoppingRow[]) : shoppingSeedItems();
+    } catch {
+      return shoppingSeedItems();
+    }
+  });
 
   const fetchRows = async () => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -91,6 +105,49 @@ export default function DashboardPage() {
     const onChanged = () => fetchRows();
     window.addEventListener('ingredients:changed', onChanged);
     return () => window.removeEventListener('ingredients:changed', onChanged);
+  }, []);
+
+  const fetchShopping = async () => {
+    try {
+      if (isSupabaseEnabled && supabase) {
+        const res = await supabase
+          .from('shopping_items')
+          .select('id,name,"from",memo,checked,created_at')
+          .order('checked', { ascending: true })
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (res.error) return;
+        const next = (res.data ?? []).map((r) => ({
+          id: (r as { id: string }).id,
+          name: (r as { name: string }).name,
+          from: (r as { from: string }).from,
+          done: !!(r as { checked?: boolean }).checked,
+          memo: (r as { memo?: string | null }).memo ?? null,
+        })) as StoredShoppingRow[];
+        setShoppingRows(next);
+        return;
+      }
+
+      if (typeof window === 'undefined') return;
+      const raw = window.localStorage.getItem(SHOPPING_KEY);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+      const arr = Array.isArray(parsed) ? (parsed as StoredShoppingRow[]) : shoppingSeedItems();
+      setShoppingRows(arr);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    // eslint(react-hooks/set-state-in-effect): run async to avoid sync cascades
+    Promise.resolve().then(() => fetchShopping());
+    const onShopChanged = () => fetchShopping();
+    window.addEventListener('storage', onShopChanged);
+    window.addEventListener('shopping:changed', onShopChanged);
+    return () => {
+      window.removeEventListener('storage', onShopChanged);
+      window.removeEventListener('shopping:changed', onShopChanged);
+    };
   }, []);
 
   const ingredientItems = useMemo(() => {
@@ -171,10 +228,12 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 22 }}>
           {stats.map(s => (
             <div key={s.loc} className="card" style={{ padding: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <span className={`dot ${s.loc}`} style={{ width: 8, height: 8 }} />
-                <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{s.label}</span>
-                {s.danger > 0 && <span className="badge danger" style={{ marginLeft: 'auto' }}>D-2 임박 {s.danger}</span>}
+              <div className="dash-stat-head">
+                <div className="dash-stat-head-row">
+                  <span className={`dot ${s.loc}`} style={{ width: 8, height: 8 }} />
+                  <span className="dash-stat-label">{s.label}</span>
+                </div>
+                {s.danger > 0 ? <span className="badge danger">D-2 임박 {s.danger}</span> : null}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span className="num-display" style={{ fontSize: 38, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1 }}>{s.count}</span>
@@ -223,7 +282,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: 13, fontWeight: 600 }}>장보기 목록</div>
               <Link href="/shopping"><span className="lnk" style={{ fontSize: 11.5 }}>장보기 페이지로 →</span></Link>
             </div>
-            {SHOPPING.slice(0, 6).map((s, idx) => (
+            {shoppingRows.slice(0, 6).map((s, idx) => (
               <div key={s.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 0',
