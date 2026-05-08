@@ -1,6 +1,7 @@
 'use client';
 
 import Icon from '@/components/Icon';
+import { withSubjectParticle } from '@/lib/korean';
 
 type ExistingItem = {
   name: string;
@@ -57,7 +58,7 @@ export default function DuplicateIngredientDialog({
           <div style={{ color: 'var(--exp-amber)' }}>
             <Icon name="bell" size={18} />
           </div>
-          <div style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-0.01em' }}>{titleName}가 이미 있어요</div>
+          <div style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-0.01em' }}>{withSubjectParticle(titleName)} 이미 있어요</div>
           <div style={{ flex: 1 }} />
           <button
             type="button"

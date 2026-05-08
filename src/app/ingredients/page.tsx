@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/Icon';
 import { INGREDIENTS as MOCK_INGREDIENTS, LOC_LABEL, type Loc, dCount, dSeverity } from '@/lib/data';
+import { withSubjectParticle } from '@/lib/korean';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 import DuplicateIngredientDialog from './_components/DuplicateIngredientDialog';
 
@@ -598,7 +599,7 @@ export default function IngredientsPage() {
         <DuplicateIngredientDialog
           open={dupOpen}
           titleName={dupName || '재료'}
-          description={dupName ? `등록된 ${dupName}가 있어요. 그래도 추가할까요?` : '등록된 재료가 있어요. 그래도 추가할까요?'}
+          description={dupName ? `등록된 ${withSubjectParticle(dupName)} 있어요. 그래도 추가할까요?` : '등록된 재료가 있어요. 그래도 추가할까요?'}
           existingItems={dupExistingItems}
           onSkip={async () => {
             setDupOpen(false);
