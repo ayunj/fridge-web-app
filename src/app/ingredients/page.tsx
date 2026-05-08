@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/Icon';
 import { INGREDIENTS as MOCK_INGREDIENTS, LOC_LABEL, type Loc, dCount, dSeverity } from '@/lib/data';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
+import DuplicateIngredientDialog from './_components/DuplicateIngredientDialog';
 
 type FilterKey = 'all' | Loc | 'soon';
 type SortKey = 'expires_asc' | 'expires_desc' | 'created_desc' | 'name_asc';
@@ -62,6 +63,13 @@ export default function IngredientsPage() {
   const [quickAddErr, setQuickAddErr] = useState<string | null>(null);
   const [localAdds, setLocalAdds] = useState<ViewItem[]>([]);
   const LOCAL_ADDS_KEY = 'ingredients.localAdds.v1';
+
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupName, setDupName] = useState<string>('');
+  const [dupExistingItems, setDupExistingItems] = useState<{ name: string; meta: string; metaTone?: 'danger' | 'normal' }[]>([]);
+  const [dupQueue, setDupQueue] = useState<{ name: string; qtyText: string; loc: Loc }[] | null>(null);
+  const [dupAccepted, setDupAccepted] = useState<{ name: string; qtyText: string; loc: Loc }[] | null>(null);
+  const [dupCurrent, setDupCurrent] = useState<{ name: string; qtyText: string; loc: Loc } | null>(null);
 
   const isViewItem = (x: unknown): x is ViewItem => {
     if (!x || typeof x !== 'object') return false;
@@ -301,6 +309,43 @@ export default function IngredientsPage() {
     return out;
   };
 
+  const normalizeName = (s: string) =>
+    (s ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/[()[\]{}'"`~!@#$%^&*+=|\\/:;,.?<>_-]/g, '');
+
+  const levenshtein = (a: string, b: string) => {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+    return dp[m][n];
+  };
+
+  const isSimilarName = (inputName: string, existingName: string) => {
+    const a = normalizeName(inputName);
+    const b = normalizeName(existingName);
+    if (!a || !b) return false;
+    if (a === b) return true;
+    if (a.length >= 2 && b.length >= 2 && (a.includes(b) || b.includes(a))) return true;
+    const dist = levenshtein(a, b);
+    const maxLen = Math.max(a.length, b.length);
+    const ratio = maxLen === 0 ? 1 : 1 - dist / maxLen;
+    return ratio >= 0.82;
+  };
+
   const upsertDefsAndInsertItems = async (items: { name: string; qtyText: string; loc: Loc }[]) => {
     if (!isSupabaseEnabled || !supabase) return;
 
@@ -335,30 +380,22 @@ export default function IngredientsPage() {
     }
   };
 
-  const onQuickAdd = async () => {
-    const raw = quickText.trim();
-    if (!raw) return;
-
-    const parsed = parseQuickText(raw);
-    if (parsed.length === 0) return;
-
+  const doQuickAdd = async (items: { name: string; qtyText: string; loc: Loc }[]) => {
     setQuickAdding(true);
     setQuickAddErr(null);
     try {
-      const items = parsed.map((p) => ({ ...p, loc: quickLoc }));
-
       if (!isSupabaseEnabled || !supabase) {
         const now = Date.now();
         const adds = items.map((it, idx) => ({
-            id: `local-${now}-${idx}-${it.name}`,
-            name: it.name,
-            loc: it.loc,
-            qty: it.qtyText,
-            cat: '기타',
-            d: 999,
-            expiresAt: null,
-            createdAt: new Date().toISOString(),
-          }));
+          id: `local-${now}-${idx}-${it.name}`,
+          name: it.name,
+          loc: it.loc,
+          qty: it.qtyText,
+          cat: '기타',
+          d: 999,
+          expiresAt: null,
+          createdAt: new Date().toISOString(),
+        }));
         setLocalAdds((prev) => {
           const next = [...adds, ...prev];
           try {
@@ -372,7 +409,6 @@ export default function IngredientsPage() {
         await upsertDefsAndInsertItems(items);
         window.dispatchEvent(new Event('ingredients:changed'));
       }
-
       setQuickText('');
     } catch (e: unknown) {
       const any = e as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
@@ -387,6 +423,67 @@ export default function IngredientsPage() {
     } finally {
       setQuickAdding(false);
     }
+  };
+
+  const openDupDialogFor = (it: { name: string; qtyText: string; loc: Loc }, matches: ViewItem[]) => {
+    const name = it.name;
+    const existingItems = matches.slice(0, 6).map((m) => {
+      const sev = dSeverity(m.d);
+      const metaTone: 'danger' | 'normal' = sev === 'danger' ? 'danger' : 'normal';
+      const dLabel = m.d === 999 ? 'D-999' : `D-${m.d}`;
+      const dText = m.d <= 0 && m.d !== 999 ? `${dLabel} 초과` : dLabel;
+      return {
+        name: [m.name, m.qty].filter(Boolean).join(' · '),
+        meta: [m.cat, dText].filter(Boolean).join(' · '),
+        metaTone,
+      };
+    });
+
+    setDupName(name);
+    setDupExistingItems(existingItems);
+    setDupOpen(true);
+  };
+
+  const continueDupFlow = (queue: { name: string; qtyText: string; loc: Loc }[], accepted: { name: string; qtyText: string; loc: Loc }[]) => {
+    // 가능한 한 즉시 처리하고, "중복/유사"가 발견되면 다이얼로그로 멈춘다.
+    let rest = queue.slice();
+    const acc = accepted.slice();
+
+    while (rest.length > 0) {
+      const cur = rest[0];
+      const matches = baseItems.filter((e) => isSimilarName(cur.name, e.name));
+      if (matches.length > 0) {
+        setDupCurrent(cur);
+        setDupQueue(rest.slice(1));
+        setDupAccepted(acc);
+        openDupDialogFor(cur, matches);
+        return;
+      }
+      acc.push(cur);
+      rest = rest.slice(1);
+    }
+
+    // 모두 통과 → 한 번에 저장
+    setDupCurrent(null);
+    setDupQueue(null);
+    setDupAccepted(null);
+    setDupOpen(false);
+    if (acc.length > 0) {
+      void doQuickAdd(acc);
+    }
+  };
+
+  const onQuickAdd = async () => {
+    if (quickAdding) return;
+
+    const raw = quickText.trim();
+    if (!raw) return;
+
+    const parsed = parseQuickText(raw);
+    if (parsed.length === 0) return;
+
+    const items = parsed.map((p) => ({ ...p, loc: quickLoc }));
+    continueDupFlow(items, []);
   };
 
   const viewItems: ViewItem[] = useMemo(() => {
@@ -405,10 +502,10 @@ export default function IngredientsPage() {
     }));
   }, [mockItems, rows]);
 
-  const baseItems = useMemo(() => {
+  const baseItems = (() => {
     const base = loadErr ? mockItems : viewItems;
     return localAdds.length > 0 ? [...localAdds, ...base] : base;
-  }, [loadErr, localAdds, mockItems, viewItems]);
+  })();
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -498,6 +595,40 @@ export default function IngredientsPage() {
   return (
     <AppShell>
       <div style={{ padding: 24, paddingTop: 20 }}>
+        <DuplicateIngredientDialog
+          open={dupOpen}
+          titleName={dupName || '재료'}
+          description={dupName ? `등록된 ${dupName}가 있어요. 그래도 추가할까요?` : '등록된 재료가 있어요. 그래도 추가할까요?'}
+          existingItems={dupExistingItems}
+          onSkip={async () => {
+            setDupOpen(false);
+            const cur = dupCurrent;
+            const q = dupQueue ?? [];
+            const acc = dupAccepted ?? [];
+            setDupCurrent(null);
+            setDupQueue(null);
+            setDupAccepted(null);
+            if (!cur) {
+              // 안전장치: 상태가 꼬였으면 그냥 큐만 계속 진행
+              continueDupFlow(q, acc);
+              return;
+            }
+            // 현재 항목은 "건너뛰기" 처리하고, 다음 항목을 계속 검사한다.
+            continueDupFlow(q, acc);
+          }}
+          onConfirm={async () => {
+            setDupOpen(false);
+            const cur = dupCurrent;
+            const q = dupQueue ?? [];
+            const acc = dupAccepted ?? [];
+            setDupCurrent(null);
+            setDupQueue(null);
+            setDupAccepted(null);
+            if (cur) acc.push(cur);
+            continueDupFlow(q, acc);
+          }}
+        />
+
         {!isSupabaseEnabled ? (
           <div
             className="card"
