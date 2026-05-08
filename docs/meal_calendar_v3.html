@@ -1,0 +1,285 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.page { padding: 1.5rem 0; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.subtitle { font-size: 14px; color: var(--color-text-secondary); margin-top: 2px; }
+.month-nav { display: flex; align-items: center; gap: 10px; }
+.nav-btn { background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 10px; cursor: pointer; color: var(--color-text-secondary); font-size: 13px; }
+.active-month { background: #2C2C2A; color: #fff; border-radius: var(--border-radius-md); padding: 5px 14px; font-size: 13px; font-weight: 500; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.stat-label { font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 4px; }
+.stat-val { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+.stat-sub { font-size: 12px; color: var(--color-text-tertiary); }
+
+.cal { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
+.cal-head { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 0.5px solid var(--color-border-tertiary); }
+.cal-head-cell { padding: 10px 0; text-align: center; font-size: 12px; color: var(--color-text-tertiary); font-weight: 500; }
+.cal-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+.cal-cell { min-height: 90px; padding: 7px 8px; border-right: 0.5px solid var(--color-border-tertiary); border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; }
+.cal-cell:nth-child(7n) { border-right: none; }
+.cal-cell:nth-last-child(-n+7) { border-bottom: none; }
+.cal-cell:hover { background: var(--color-background-secondary); }
+.cal-cell.other-month { opacity: 0.35; }
+.cal-cell.today .day-num-inner { background: #2C2C2A; color: #fff; border-radius: 50%; font-weight: 500; }
+
+.day-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.day-num-inner { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--color-text-secondary); }
+.day-kcal { font-size: 10px; color: var(--color-text-tertiary); }
+
+.meal-row { display: flex; align-items: center; gap: 3px; margin-bottom: 2px; overflow: hidden; }
+.meal-type { font-size: 10px; font-weight: 500; border-radius: 3px; padding: 1px 4px; white-space: nowrap; flex-shrink: 0; }
+.type-breakfast { background: #FAEEDA; color: #633806; }
+.type-lunch { background: #E1F5EE; color: #085041; }
+.type-dinner { background: #E6F1FB; color: #0C447C; }
+.type-snack { background: #F1EFE8; color: #444441; }
+.meal-name { font-size: 11px; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.more-btn { font-size: 10px; color: var(--color-text-tertiary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 3px; padding: 1px 5px; margin-top: 2px; cursor: pointer; display: inline-block; }
+
+.modals { display: flex; gap: 16px; margin-top: 1.5rem; }
+.modal-bg { background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; min-height: 480px; flex: 1; border-radius: var(--border-radius-lg); }
+
+.modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); width: 300px; overflow: hidden; }
+.modal-head { padding: 16px 18px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; align-items: flex-start; }
+.modal-head-left { }
+.modal-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.modal-date { font-size: 12px; color: var(--color-text-tertiary); }
+.close-btn { background: none; border: none; cursor: pointer; color: var(--color-text-tertiary); font-size: 18px; padding: 0; }
+
+.day-detail-list { padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; }
+.detail-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); }
+.detail-type { font-size: 11px; font-weight: 500; border-radius: 4px; padding: 3px 7px; flex-shrink: 0; }
+.detail-info { flex: 1; }
+.detail-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.detail-kcal { font-size: 12px; color: var(--color-text-tertiary); margin-top: 1px; }
+.del-btn { font-size: 15px; color: var(--color-text-tertiary); background: none; border: none; cursor: pointer; padding: 4px; }
+.day-total { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; border-top: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+.day-total-label { color: var(--color-text-secondary); }
+.day-total-val { font-weight: 500; color: var(--color-text-primary); }
+.day-add-btn { margin: 10px 18px 14px; width: calc(100% - 36px); padding: 10px; font-size: 14px; background: #2C2C2A; color: #fff; border: none; border-radius: var(--border-radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+.add-modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); width: 300px; overflow: hidden; }
+.add-modal-head { padding: 16px 18px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; align-items: flex-start; }
+.add-modal-body { padding: 14px 18px; }
+
+.mtype-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+.mtype-btn { padding: 8px 0; font-size: 12px; font-weight: 500; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: none; cursor: pointer; color: var(--color-text-secondary); }
+.mtype-btn.sel-lunch { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+
+.search-wrap { position: relative; margin-bottom: 10px; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--color-text-tertiary); }
+.search-input { width: 100%; padding: 9px 12px 9px 32px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; }
+
+.tabs { display: flex; gap: 0; margin-bottom: 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); overflow: hidden; }
+.tab { flex: 1; font-size: 12px; padding: 7px 0; border: none; background: none; color: var(--color-text-secondary); cursor: pointer; text-align: center; }
+.tab.active { background: #2C2C2A; color: #fff; }
+
+.recipe-list { display: flex; flex-direction: column; gap: 5px; max-height: 175px; overflow-y: auto; }
+.recipe-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; }
+.recipe-item:hover { background: var(--color-background-secondary); }
+.recipe-item.selected { border-color: #2C2C2A; }
+.r-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-secondary); flex-shrink: 0; }
+.recipe-item.selected .r-dot { background: #2C2C2A; }
+.r-name { flex: 1; font-size: 13px; color: var(--color-text-primary); }
+.r-kcal { font-size: 11px; color: var(--color-text-tertiary); }
+
+.add-modal-foot { padding: 12px 18px; border-top: 0.5px solid var(--color-border-tertiary); display: flex; gap: 8px; }
+.btn-cancel { flex: 1; padding: 9px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: none; color: var(--color-text-secondary); cursor: pointer; }
+.btn-save { flex: 2; padding: 9px; font-size: 13px; font-weight: 500; border: none; border-radius: var(--border-radius-md); background: #2C2C2A; color: #fff; cursor: pointer; }
+</style>
+
+<div class="page">
+  <div class="top-bar">
+    <div>
+      <div class="title">식사 달력</div>
+      <div class="subtitle">요리 완료한 레시피와 칼로리를 자동으로 기록해요.</div>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn"><i class="ti ti-chevron-left" aria-hidden="true"></i> 4월</button>
+      <span class="active-month">2026년 5월</span>
+      <button class="nav-btn">6월 <i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">이번 달 요리</div><div class="stat-val">7 <span style="font-size:14px;font-weight:400;">일</span></div></div>
+    <div class="stat"><div class="stat-label">총 섭취</div><div class="stat-val">3,970 <span style="font-size:14px;font-weight:400;">kcal</span></div></div>
+    <div class="stat"><div class="stat-label">일 평균</div><div class="stat-val">567 <span style="font-size:14px;font-weight:400;">kcal</span></div></div>
+    <div class="stat"><div class="stat-label">가장 많이 만든</div><div class="stat-val" style="font-size:15px;">계란말이</div><div class="stat-sub">2회</div></div>
+  </div>
+
+  <div class="cal">
+    <div class="cal-head">
+      <div class="cal-head-cell">월</div><div class="cal-head-cell">화</div><div class="cal-head-cell">수</div>
+      <div class="cal-head-cell">목</div><div class="cal-head-cell">금</div><div class="cal-head-cell">토</div><div class="cal-head-cell">일</div>
+    </div>
+    <div class="cal-body">
+      <div class="cal-cell other-month"><div class="day-top"><div class="day-num-inner">27</div></div></div>
+      <div class="cal-cell other-month"><div class="day-top"><div class="day-num-inner">28</div><span class="day-kcal">320kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-lunch">점심</span><span class="meal-name">닭가슴살 샐러드</span></div>
+      </div>
+      <div class="cal-cell other-month"><div class="day-top"><div class="day-num-inner">29</div></div></div>
+      <div class="cal-cell other-month"><div class="day-top"><div class="day-num-inner">30</div><span class="day-kcal">310kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">된장찌개</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">1</div><span class="day-kcal">650kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-lunch">점심</span><span class="meal-name">제육볶음</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">시금치 무침</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">2</div><span class="day-kcal">580kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">새우 볶음밥</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">3</div><span class="day-kcal">510kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-breakfast">아침</span><span class="meal-name">계란말이</span></div>
+        <div class="meal-row"><span class="meal-type type-lunch">점심</span><span class="meal-name">감자조림</span></div>
+        <span class="more-btn">+1</span>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">4</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">5</div><span class="day-kcal">480kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">마파두부</span></div>
+      </div>
+      <div class="cal-cell today"><div class="day-top"><div class="day-num-inner">6</div><span class="day-kcal">420kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-lunch">점심</span><span class="meal-name">두부 김치찌개</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">7</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">8</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">9</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">10</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">11</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">12</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">13</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">14</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">15</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">16</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">17</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">18</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">19</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">20</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">21</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">22</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">23</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">24</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">25</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">26</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">27</div><span class="day-kcal">700kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-breakfast">아침</span><span class="meal-name">계란말이</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">두부 김치찌개</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">28</div><span class="day-kcal">320kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-lunch">점심</span><span class="meal-name">닭가슴살 샐러드</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">29</div></div></div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">30</div><span class="day-kcal">310kcal</span></div>
+        <div class="meal-row"><span class="meal-type type-dinner">저녁</span><span class="meal-name">된장찌개</span></div>
+      </div>
+      <div class="cal-cell"><div class="day-top"><div class="day-num-inner">31</div></div></div>
+    </div>
+  </div>
+
+  <div class="modals">
+    <div class="modal-bg">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-head-left">
+            <div class="modal-title">5월 3일 식사 기록</div>
+            <div class="modal-date">총 510kcal</div>
+          </div>
+          <button class="close-btn"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="day-detail-list">
+          <div class="detail-item">
+            <span class="detail-type type-breakfast">아침</span>
+            <div class="detail-info">
+              <div class="detail-name">계란말이</div>
+              <div class="detail-kcal">280kcal</div>
+            </div>
+            <button class="del-btn"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </div>
+          <div class="detail-item">
+            <span class="detail-type type-lunch">점심</span>
+            <div class="detail-info">
+              <div class="detail-name">감자조림</div>
+              <div class="detail-kcal">120kcal</div>
+            </div>
+            <button class="del-btn"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </div>
+          <div class="detail-item">
+            <span class="detail-type type-snack">간식</span>
+            <div class="detail-info">
+              <div class="detail-name">된장찌개</div>
+              <div class="detail-kcal">110kcal</div>
+            </div>
+            <button class="del-btn"><i class="ti ti-trash" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="day-total">
+          <span class="day-total-label">합계</span>
+          <span class="day-total-val">510kcal</span>
+        </div>
+        <button class="day-add-btn"><i class="ti ti-plus" style="font-size:15px" aria-hidden="true"></i> 식사 추가</button>
+      </div>
+    </div>
+
+    <div class="modal-bg">
+      <div class="add-modal">
+        <div class="add-modal-head">
+          <div class="modal-head-left">
+            <div class="modal-title">식사 추가</div>
+            <div class="modal-date">5월 6일 (수)</div>
+          </div>
+          <button class="close-btn"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        <div class="add-modal-body">
+          <div class="mtype-grid">
+            <button class="mtype-btn">아침</button>
+            <button class="mtype-btn sel-lunch">점심</button>
+            <button class="mtype-btn">저녁</button>
+            <button class="mtype-btn">간식</button>
+          </div>
+          <div class="search-wrap">
+            <i class="ti ti-search search-icon" aria-hidden="true"></i>
+            <input class="search-input" placeholder="레시피 검색..." />
+          </div>
+          <div class="tabs">
+            <button class="tab active">내 레시피</button>
+            <button class="tab">추천 레시피</button>
+          </div>
+          <div class="recipe-list">
+            <div class="recipe-item selected">
+              <div class="r-dot"></div>
+              <div class="r-name">두부 김치찌개</div>
+              <div class="r-kcal">420kcal</div>
+            </div>
+            <div class="recipe-item">
+              <div class="r-dot"></div>
+              <div class="r-name">계란말이</div>
+              <div class="r-kcal">280kcal</div>
+            </div>
+            <div class="recipe-item">
+              <div class="r-dot"></div>
+              <div class="r-name">된장찌개</div>
+              <div class="r-kcal">310kcal</div>
+            </div>
+            <div class="recipe-item">
+              <div class="r-dot"></div>
+              <div class="r-name">제육볶음</div>
+              <div class="r-kcal">540kcal</div>
+            </div>
+            <div class="recipe-item">
+              <div class="r-dot"></div>
+              <div class="r-name">닭가슴살 샐러드</div>
+              <div class="r-kcal">320kcal</div>
+            </div>
+          </div>
+        </div>
+        <div class="add-modal-foot">
+          <button class="btn-cancel">취소</button>
+          <button class="btn-save">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
