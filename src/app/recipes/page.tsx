@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/Icon';
 import Modal from '@/components/Modal';
 import RecipeCategoryIcon, { recipeTypeKey } from '@/components/recipes/RecipeCategoryIcon';
+import RecipeViewDetail from '@/components/recipes/RecipeViewDetail';
 import thumbStyles from '@/components/recipes/RecipeCategoryThumb.module.css';
 import { isSupabaseEnabled, supabase } from '@/lib/supabase/client';
 
@@ -82,13 +83,6 @@ function getErrMessage(e: unknown): string {
     .filter(Boolean)
     .join(' · ');
   return extra ? `${msg} (${extra})` : msg;
-}
-
-function toSafeExternalUrl(raw: string | null): string | null {
-  const t = (raw ?? '').trim();
-  if (!t) return null;
-  if (/^https?:\/\//i.test(t)) return t;
-  return `https://${t}`;
 }
 
 function emptyDetail(): RecipeDetail {
@@ -581,6 +575,8 @@ export default function RecipesPage() {
       {/* View / Edit modal */}
       {viewId ? (
         <Modal
+          stripeHeader
+          maxWidth={isEditMode ? 920 : 600}
           title={isEditMode ? '레시피 수정' : '레시피 상세'}
           actions={
             isEditMode ? (
@@ -637,7 +633,7 @@ export default function RecipesPage() {
                 compactActions
               />
             ) : (
-              <RecipeView detail={viewDetail} onEdit={openEditFromView} />
+              <RecipeViewDetail detail={viewDetail} />
             )
           ) : null}
         </Modal>
@@ -1145,74 +1141,4 @@ function RecipeForm({
   );
 }
 
-function RecipeView({
-  detail,
-  onEdit,
-}: {
-  detail: RecipeDetail;
-  onEdit: () => void;
-}) {
-  const ytUrl = toSafeExternalUrl(detail.youtubeUrl);
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-        <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em' }}>{detail.title}</div>
-        {ytUrl ? (
-          <a
-            href={ytUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="pill"
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, height: 26 }}
-            title="링크 열기"
-          >
-            <Icon name="link" size={13} style={{ color: 'var(--text-tertiary)' }} /> 링크 열기
-          </a>
-        ) : null}
-        <div style={{ flex: 1 }} />
-      </div>
-      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>
-        {detail.recipeType ? `${detail.recipeType} · ` : ''}
-        {detail.kcal ? `${detail.kcal} kcal` : '칼로리 미입력'}
-        {detail.servings ? ` · ${detail.servings}인분` : ''}
-      </div>
-      {detail.memo ? (
-        <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{detail.memo}</div>
-        </div>
-      ) : null}
 
-      <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-        <div className="h-section" style={{ marginBottom: 8 }}>재료 {detail.ingredients.filter((x) => x.name.trim()).length}개</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 6 }}>
-          {detail.ingredients
-            .filter((x) => x.name.trim())
-            .map((x, idx) => (
-              <div key={`${x.name}-${idx}`} style={{ padding: '8px 10px', borderRadius: 8, border: '0.5px solid var(--border)', background: '#fbfaf7', display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                <span style={{ fontSize: 12.5, flex: 1 }}>{x.name}</span>
-                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-                  {[x.qtyText, x.unit].filter(Boolean).join(' ')}
-                </span>
-              </div>
-            ))}
-        </div>
-      </div>
-
-      <div className="card" style={{ padding: 12 }}>
-        <div className="h-section" style={{ marginBottom: 8 }}>레시피 단계 {detail.steps.filter((x) => x.body.trim()).length}개</div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {detail.steps
-            .filter((x) => x.body.trim())
-            .map((x, idx) => (
-              <div key={idx} style={{ padding: '10px 0', borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)', display: 'flex', gap: 10 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--surface-2)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--text-tertiary)' }}>
-                  {idx + 1}
-                </div>
-                <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>{x.body}</div>
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-}

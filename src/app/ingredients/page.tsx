@@ -530,54 +530,59 @@ export default function IngredientsPage() {
         </div>
 
         {/* Quick add bar */}
-        <div className="card" style={{ padding: 6, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Icon name="plus" size={16} style={{ marginLeft: 10, color: 'var(--text-tertiary)' }} />
-          <input
-            placeholder="재료를 입력하세요. 예) 두부 1모, 계란 8개"
-            value={quickText}
-            onChange={(e) => setQuickText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') onQuickAdd();
-            }}
-            style={{
-              flex: 1, height: 38, border: 'none', outline: 'none', background: 'transparent',
-              fontSize: 14, color: 'var(--text-primary)',
-            }}
-          />
-          <div style={{ display: 'flex', gap: 4, padding: 4, background: '#f7f6f3', borderRadius: 8 }}>
-            {[
-              { l: '냉장', loc: 'fridge' as const },
-              { l: '냉동', loc: 'freezer' as const },
-              { l: '상온', loc: 'pantry' as const },
-            ].map((t) => {
-              const on = quickLoc === t.loc;
-              return (
-                <button
-                  key={t.l}
-                  type="button"
-                  onClick={() => setQuickLoc(t.loc)}
-                  style={{
-                height: 30, padding: '0 12px', border: 'none', borderRadius: 6,
-                background: on ? 'var(--surface)' : 'transparent',
-                boxShadow: on ? 'var(--shadow-sm)' : 'none',
-                fontSize: 11.5, color: 'var(--text-primary)',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span className={`dot ${t.loc}`} style={{ width: 6, height: 6 }} />
-                {t.l}
-              </button>
-              );
-            })}
+        <div className="card ing-quickbar" style={{ padding: 6, marginBottom: 16 }}>
+          <div className="ing-quickbar-row">
+            <Icon name="plus" size={16} style={{ marginLeft: 10, color: 'var(--text-tertiary)' }} />
+            <input
+              className="ing-quickbar-input"
+              placeholder="재료를 입력하세요. 예) 두부 1모, 계란 8개"
+              value={quickText}
+              onChange={(e) => setQuickText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onQuickAdd();
+              }}
+              style={{
+                flex: 1,
+                height: 38,
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                fontSize: 14,
+                color: 'var(--text-primary)',
+                minWidth: 0,
+              }}
+            />
+            <div className="ing-quickbar-locs">
+              {[
+                { l: '냉장', loc: 'fridge' as const },
+                { l: '냉동', loc: 'freezer' as const },
+                { l: '상온', loc: 'pantry' as const },
+              ].map((t) => {
+                const on = quickLoc === t.loc;
+                return (
+                  <button
+                    key={t.l}
+                    type="button"
+                    onClick={() => setQuickLoc(t.loc)}
+                    className="ing-quickbar-locbtn"
+                    data-on={on ? '1' : '0'}
+                  >
+                    <span className={`dot ${t.loc}`} style={{ width: 6, height: 6 }} />
+                    {t.l}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              className="btn ing-quickbar-add"
+              type="button"
+              onClick={onQuickAdd}
+              disabled={quickAdding}
+              style={{ marginRight: 4, opacity: quickAdding ? 0.7 : 1 }}
+            >
+              {quickAdding ? '추가 중…' : '추가'}
+            </button>
           </div>
-          <button
-            className="btn"
-            type="button"
-            onClick={onQuickAdd}
-            disabled={quickAdding}
-            style={{ marginRight: 4, opacity: quickAdding ? 0.7 : 1 }}
-          >
-            {quickAdding ? '추가 중…' : '추가'}
-          </button>
         </div>
         {quickAddErr ? (
           <div className="card" style={{ padding: '10px 12px', marginBottom: 14 }}>
@@ -792,10 +797,14 @@ export default function IngredientsPage() {
                   minWidth: 0,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className={`dot ${i.loc}`} />
-                  <span style={{ fontSize: 10.5, color: 'var(--text-tertiary)' }}>{LOC_LABEL[i.loc]}</span>
-                  <span className={`badge ${sev}`} style={{ marginLeft: 'auto' }}>{dCount(i.d)}</span>
+                <div className="ing-card-head">
+                  <div className="ing-card-head-row">
+                    <span className={`dot ${i.loc}`} />
+                    <span className="ing-card-loc">{LOC_LABEL[i.loc]}</span>
+                  </div>
+                  <div className="ing-card-exp">
+                    <span className={`badge ${sev}`}>{dCount(i.d)}</span>
+                  </div>
                 </div>
                 <div
                   style={{

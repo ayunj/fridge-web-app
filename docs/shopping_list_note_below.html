@@ -1,0 +1,230 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.page { padding: 1.5rem 0; max-width: 720px; font-family: var(--font-sans); }
+.title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+
+.add-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+.input-wrap { flex: 1; display: flex; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
+.input-wrap:focus-within { border-color: var(--color-border-primary); }
+.inp { flex: 1; padding: 10px 14px; font-size: 14px; border: none; outline: none; background: transparent; color: var(--color-text-primary); }
+.inp::placeholder { color: var(--color-text-tertiary); }
+.inp-div { width: 0.5px; background: var(--color-border-tertiary); }
+.add-btn { padding: 10px 20px; background: #2C2C2A; color: #fff; border: none; border-radius: var(--border-radius-lg); font-size: 14px; font-weight: 500; cursor: pointer; }
+
+.count-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.count { font-size: 13px; color: var(--color-text-secondary); }
+.del-btn { font-size: 13px; color: var(--color-text-secondary); background: none; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 4px 12px; cursor: pointer; }
+
+.item { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 6px; background: var(--color-background-primary); overflow: hidden; cursor: pointer; }
+.item-row { display: flex; align-items: center; padding: 12px 16px; gap: 12px; }
+.item-row:hover { background: var(--color-background-secondary); }
+.item.editing > .item-row { background: var(--color-background-secondary); }
+
+.cb { width: 18px; height: 18px; border: 0.5px solid var(--color-border-secondary); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.cb.on { background: #2C2C2A; border-color: #2C2C2A; }
+
+.item-text { flex: 1; }
+.item-name { font-size: 14px; color: var(--color-text-primary); line-height: 1.4; }
+.item-note { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+.recipe-tag { font-size: 12px; color: var(--color-text-info); background: var(--color-background-info); border-radius: var(--border-radius-md); padding: 3px 8px; white-space: nowrap; flex-shrink: 0; }
+.x-btn { font-size: 14px; color: var(--color-text-tertiary); cursor: pointer; background: none; border: none; padding: 4px; flex-shrink: 0; }
+
+/* 편집 패널 */
+.edit-panel { display: none; padding: 10px 16px 14px; border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+.edit-panel.open { display: block; }
+.edit-fields { display: flex; gap: 8px; margin-bottom: 8px; }
+.edit-inp { flex: 1; padding: 8px 12px; font-size: 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+.edit-inp:focus { border-color: var(--color-border-primary); }
+.edit-inp::placeholder { color: var(--color-text-tertiary); }
+.edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.save-btn { padding: 7px 16px; background: #2C2C2A; color: #fff; border: none; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; }
+.cancel-btn { padding: 7px 12px; background: none; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
+
+.done .item-name { text-decoration: line-through; opacity: 0.4; }
+.done .item-note { opacity: 0.4; }
+</style>
+
+<div class="page">
+  <h1 class="title">장보기 목록</h1>
+  <p class="subtitle">레시피에서 추가됐거나 직접 입력한 항목들. 체크하면 자동으로 재료에 추가돼요.</p>
+
+  <div style="display:flex;gap:0;padding:0 2px;margin-bottom:4px;">
+    <span style="font-size:12px;color:var(--color-text-tertiary);flex:1.2;">재료명</span>
+    <span style="font-size:12px;color:var(--color-text-tertiary);flex:1;padding-left:12px;border-left:0.5px solid var(--color-border-tertiary);margin-left:4px;">비고 (선택)</span>
+  </div>
+  <div class="add-row">
+    <div class="input-wrap">
+      <input class="inp" placeholder="두부" />
+      <div class="inp-div"></div>
+      <input class="inp" placeholder="단단한 걸로, 2모" />
+    </div>
+    <button class="add-btn">추가</button>
+  </div>
+
+  <div class="count-row">
+    <span class="count">구매 예정 7</span>
+    <button class="del-btn"><i class="ti ti-trash" style="font-size:13px" aria-hidden="true"></i> 완료 항목 삭제</button>
+  </div>
+
+  <div class="item" id="i1" onclick="toggle('i1')">
+    <div class="item-row">
+      <div class="cb" onclick="event.stopPropagation()"></div>
+      <div class="item-text">
+        <div class="item-name">참치</div>
+      </div>
+      <span class="recipe-tag">← 김치찌개</span>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i1-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="참치" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i1')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i1')">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="item" id="i2" onclick="toggle('i2')">
+    <div class="item-row">
+      <div class="cb" onclick="event.stopPropagation()"></div>
+      <div class="item-text">
+        <div class="item-name">김치</div>
+        <div class="item-note">묵은지로</div>
+      </div>
+      <span class="recipe-tag">← 김치찌개</span>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i2-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="김치" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" value="묵은지로" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i2')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i2')">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="item" id="i3" onclick="toggle('i3')">
+    <div class="item-row">
+      <div class="cb" onclick="event.stopPropagation()"></div>
+      <div class="item-text">
+        <div class="item-name">두부</div>
+        <div class="item-note">단단한 걸로</div>
+      </div>
+      <span class="recipe-tag">← 김치찌개</span>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i3-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="두부" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" value="단단한 걸로" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i3')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i3')">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="item" id="i4" onclick="toggle('i4')">
+    <div class="item-row">
+      <div class="cb" onclick="event.stopPropagation()"></div>
+      <div class="item-text">
+        <div class="item-name">계란</div>
+        <div class="item-note">한 판</div>
+      </div>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i4-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="계란" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" value="한 판" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i4')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i4')">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="item" id="i5" onclick="toggle('i5')">
+    <div class="item-row">
+      <div class="cb" onclick="event.stopPropagation()"></div>
+      <div class="item-text">
+        <div class="item-name">대파</div>
+      </div>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i5-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="대파" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i5')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i5')">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="item done" id="i6" onclick="toggle('i6')">
+    <div class="item-row" style="opacity:0.5">
+      <div class="cb on" onclick="event.stopPropagation()"><i class="ti ti-check" style="font-size:12px;color:#fff" aria-hidden="true"></i></div>
+      <div class="item-text">
+        <div class="item-name">두유</div>
+      </div>
+      <button class="x-btn" onclick="event.stopPropagation()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="edit-panel" id="i6-panel">
+      <div class="edit-fields">
+        <input class="edit-inp" placeholder="재료명" value="두유" style="max-width:160px" onclick="event.stopPropagation()" />
+        <input class="edit-inp" placeholder="비고" onclick="event.stopPropagation()" />
+      </div>
+      <div class="edit-actions">
+        <button class="cancel-btn" onclick="event.stopPropagation();toggle('i6')">취소</button>
+        <button class="save-btn" onclick="event.stopPropagation();save('i6')">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggle(id) {
+  const panel = document.getElementById(id + '-panel');
+  const item = document.getElementById(id);
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.edit-panel.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.item.editing').forEach(i => i.classList.remove('editing'));
+  if (!isOpen) {
+    panel.classList.add('open');
+    item.classList.add('editing');
+    panel.querySelector('input').focus();
+  }
+}
+function save(id) {
+  const panel = document.getElementById(id + '-panel');
+  const item = document.getElementById(id);
+  const inputs = panel.querySelectorAll('input');
+  const name = inputs[0].value.trim();
+  const note = inputs[1].value.trim();
+  const textEl = item.querySelector('.item-text');
+  if (name) textEl.querySelector('.item-name').textContent = name;
+  let noteEl = textEl.querySelector('.item-note');
+  if (note) {
+    if (!noteEl) { noteEl = document.createElement('div'); noteEl.className = 'item-note'; textEl.appendChild(noteEl); }
+    noteEl.textContent = note;
+  } else if (noteEl) {
+    noteEl.remove();
+  }
+  panel.classList.remove('open');
+  item.classList.remove('editing');
+}
+</script>

@@ -104,12 +104,16 @@ export default function IngredientEditor({
 }) {
   const router = useRouter();
   const isCreate = !id || id === 'new';
+  const isMock = !!id && id.startsWith('mock-');
+  const isLocal = !!id && id.startsWith('local-');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [catAdding, setCatAdding] = useState(false);
   const [newCatName, setNewCatName] = useState('');
+  const LOCAL_ADDS_KEY = 'ingredients.localAdds.v1';
 
   const [cats, setCats] = useState<(CategoryRow & { sort_order?: number | null })[]>([]);
   const [locs, setLocs] = useState<LocationRow[]>([
@@ -264,6 +268,15 @@ export default function IngredientEditor({
       return;
     }
 
+    // local quick-add: read-only 화면(삭제는 가능)
+    if (id.startsWith('local-')) {
+      Promise.resolve().then(() => {
+        setErr('로컬 추가 항목은 상세 편집을 지원하지 않아요. (삭제는 가능)');
+        setLoading(false);
+      });
+      return;
+    }
+
     if (!isSupabaseEnabled || !supabase) {
       Promise.resolve().then(() => {
         setErr('Supabase 연결이 꺼져 있어요.');
@@ -382,6 +395,7 @@ export default function IngredientEditor({
   const onSave = async () => {
     if (!id && !isCreate) return;
     if (id?.startsWith('mock-')) return;
+    if (id?.startsWith('local-')) return;
     if (!isSupabaseEnabled || !supabase) return;
     if (!isCreate && !defId) return;
     if (isCreate && !name.trim()) {
@@ -500,6 +514,47 @@ export default function IngredientEditor({
       setErr(getErrMessage(e));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!id || isCreate) return;
+    if (isMock) return;
+
+    const ok = window.confirm('이 재료를 삭제할까요?');
+    if (!ok) return;
+
+    setDeleting(true);
+    setErr(null);
+    try {
+      if (isLocal) {
+        try {
+          const raw = window.localStorage.getItem(LOCAL_ADDS_KEY);
+          const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+          const arr = Array.isArray(parsed) ? parsed : [];
+          const next = arr.filter((x) => !x || typeof x !== 'object' || (x as { id?: unknown }).id !== id);
+          window.localStorage.setItem(LOCAL_ADDS_KEY, JSON.stringify(next.slice(0, 500)));
+        } catch {
+          // ignore
+        }
+        window.dispatchEvent(new Event('ingredients:changed'));
+      } else {
+        if (!isSupabaseEnabled || !supabase) {
+          setErr('Supabase 연결이 꺼져 있어 삭제할 수 없어요.');
+          return;
+        }
+        const del = await supabase.from('ingredient_items').delete().eq('id', id);
+        if (del.error) throw del.error;
+        window.dispatchEvent(new Event('ingredients:changed'));
+      }
+
+      if (closeOnSave) router.back();
+      else if (onCloseHref) router.push(onCloseHref);
+      else router.back();
+    } catch (e: unknown) {
+      setErr(getErrMessage(e));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -659,6 +714,23 @@ export default function IngredientEditor({
             </button>
             {savedAt ? <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)' }}>저장됨</div> : null}
             <div style={{ flex: 1 }} />
+            {!isCreate && !isMock ? (
+              <button
+                type="button"
+                className="pill"
+                onClick={onDelete}
+                disabled={deleting}
+                style={{
+                  cursor: deleting ? 'default' : 'pointer',
+                  border: '1px solid rgba(244,63,94,0.45)',
+                  color: '#e11d48',
+                  background: 'transparent',
+                  opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                <Icon name="trash" size={13} /> {deleting ? '삭제 중…' : '삭제'}
+              </button>
+            ) : null}
             {onCloseHref ? (
               <a className="pill" href={onCloseHref} style={{ textDecoration: 'none' }}>
                 닫기

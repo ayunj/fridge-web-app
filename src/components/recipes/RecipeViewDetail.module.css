@@ -1,0 +1,236 @@
+/* 레시피 상세(모달) 레이아웃 — spacing/구조 중심, 색·타이포는 전역 토큰·기존 유틀과 맞춤 */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.heroRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.heroTitle {
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.heroActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heroMeta {
+  margin: 0 0 1.25rem;
+  color: var(--text-tertiary);
+}
+
+.memoCard {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+}
+
+.ingPanel {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.ingPanelTitle {
+  margin: 0 0 10px;
+}
+
+.ingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+@media (max-width: 560px) {
+  .ingGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ingCell {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+}
+
+.ingCellName {
+  min-width: 0;
+}
+
+.ingCellQty {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.ingCellMissing {
+  background: #f8dcd0;
+  border-color: rgba(185, 84, 54, 0.35);
+}
+
+.ingCellMissing .ingCellName,
+.ingCellMissing .ingCellQty {
+  color: #b95436;
+}
+
+.shopCard {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  background: var(--surface);
+}
+
+.shopHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.shopHeadTitle {
+  margin: 0;
+}
+
+.shopAlertBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  background: #f8dcd0;
+  border: 0.5px solid rgba(185, 84, 54, 0.28);
+}
+
+.shopAlertMain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #b95436;
+}
+
+.shopAlertEyebrow {
+  font-size: 12px;
+  color: #b95436;
+  opacity: 0.92;
+}
+
+.shopHint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.shopBtns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shopBtnSecondary,
+.shopBtnPrimary {
+  flex: 1;
+  min-width: 140px;
+  padding: 9px 0;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.shopBtnSecondary {
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.shopBtnSecondary:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.shopBtnPrimary {
+  border: none;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+}
+
+.shopBtnPrimary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.shopBtnSecondary:disabled,
+.shopBtnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stepsTitle {
+  margin: 0 0 8px;
+}
+
+.stepsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.stepIdx {
+  font-weight: 500;
+  color: var(--text-tertiary);
+  min-width: 16px;
+  flex-shrink: 0;
+}
+
+.stepBody {
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.stepMuted {
+  opacity: 0.45;
+}
+
+.stepMuted .stepIdx,
+.stepMuted .stepBody {
+  color: var(--text-tertiary);
+}
+
+.emptyNote {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 4px 0 0;
+}

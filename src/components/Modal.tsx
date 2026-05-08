@@ -10,12 +10,15 @@ export default function Modal({
   children,
   maxWidth = 760,
   onClose,
+  stripeHeader = false,
 }: {
   title?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
   maxWidth?: number;
   onClose?: () => void;
+  /** 헤더 하단 구분선 + 패딩 분리(본문 패딩은 스크롤 영역 안으로) */
+  stripeHeader?: boolean;
 }) {
   const router = useRouter();
   const close = useMemo(() => onClose ?? (() => router.back()), [onClose, router]);
@@ -58,7 +61,7 @@ export default function Modal({
           position: 'relative',
           width: 'min(100%, 980px)',
           maxWidth,
-          padding: 16,
+          padding: stripeHeader ? 0 : 16,
           boxShadow: 'var(--shadow-lg)',
           maxHeight: 'calc(100vh - 96px)',
           display: 'flex',
@@ -66,7 +69,17 @@ export default function Modal({
           overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: stripeHeader ? 0 : 12,
+            padding: stripeHeader ? '12px 20px' : undefined,
+            borderBottom: stripeHeader ? '0.5px solid var(--border)' : undefined,
+            flexShrink: 0,
+          }}
+        >
           <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}>{title ?? ''}</div>
           <div style={{ flex: 1 }} />
           {actions ? <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{actions}</div> : null}
@@ -79,7 +92,17 @@ export default function Modal({
             <Icon name="close" size={12} /> 닫기
           </button>
         </div>
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 6 }}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            paddingRight: stripeHeader ? 20 : 6,
+            paddingBottom: stripeHeader ? 18 : undefined,
+            paddingLeft: stripeHeader ? 20 : undefined,
+            paddingTop: stripeHeader ? 14 : undefined,
+          }}
+        >
           {children}
         </div>
       </div>
