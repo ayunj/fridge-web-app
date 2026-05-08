@@ -151,8 +151,12 @@ export default function DashboardPage() {
   }, []);
 
   const ingredientItems = useMemo(() => {
-    if (!isSupabaseEnabled) return INGREDIENTS;
-    if (loadErr) return INGREDIENTS;
+    if (!isSupabaseEnabled || loadErr) {
+      return INGREDIENTS.map((i, idx) => ({
+        ...i,
+        id: `seed-${i.loc}-${i.name}-${idx}`,
+      }));
+    }
     if (!rows) return [];
     return rows.map((r) => ({
       id: r.id,
@@ -206,7 +210,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div style={{ padding: 24, paddingTop: 20, maxWidth: 1280 }}>
+      <div style={{ padding: 24, paddingTop: 20, width: '100%', maxWidth: 'none' }}>
         {/* Page header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
@@ -264,7 +268,7 @@ export default function DashboardPage() {
               <Link href="/ingredients"><span className="lnk" style={{ fontSize: 11.5 }}>전체</span></Link>
             </div>
             {expiring.map((i, idx) => (
-              <div key={i.name} style={{
+              <div key={i.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 0',
                 borderTop: idx === 0 ? 'none' : '0.5px solid var(--border)',
