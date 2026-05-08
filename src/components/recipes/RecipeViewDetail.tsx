@@ -200,14 +200,6 @@ export default function RecipeViewDetail({
 
   const showShortageHighlight = invMatchEnabled && invReady && shortageCount > 0;
 
-  const stepRender = useMemo(() => {
-    if (steps.length <= 3) return { head: steps, muted: null as string | null };
-    return {
-      head: steps.slice(0, 2),
-      muted: `이하 ${steps.length - 2}단계 생략… (전체는 레시피 수정에서 확인)`,
-    };
-  }, [steps]);
-
   return (
     <div className={styles.root}>
       <div className={styles.heroRow}>
@@ -332,7 +324,7 @@ export default function RecipeViewDetail({
         {!steps.length ? <div className={styles.emptyNote}>등록된 단계가 없어요.</div> : null}
 
         <div className={styles.stepsStack}>
-          {stepRender.head.map((body, idx) => (
+          {steps.map((body, idx) => (
             <div key={`${idx}-${body.slice(0, 24)}`} className={styles.stepRow}>
               <span className={styles.stepIdx} style={{ fontSize: 12.5 }}>
                 {idx + 1}
@@ -342,17 +334,6 @@ export default function RecipeViewDetail({
               </span>
             </div>
           ))}
-
-          {stepRender.muted ? (
-            <div className={`${styles.stepRow} ${styles.stepMuted}`}>
-              <span className={styles.stepIdx} style={{ fontSize: 12.5 }}>
-                {stepRender.head.length + 1}
-              </span>
-              <span className={styles.stepBody} style={{ fontSize: 12.5 }}>
-                {stepRender.muted}
-              </span>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>
