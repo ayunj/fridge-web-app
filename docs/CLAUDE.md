@@ -9,6 +9,25 @@
 
 ---
 
+## 상시 참조(하네스) — “계속 확인하는 문서”
+
+이 파일(`docs/CLAUDE.md`)은 **짧게 유지**하고, 상세 분석은 아래 문서로 분리합니다.
+
+### 목차(링크)
+
+- **상세 분석 인덱스**: `docs/analysis/INDEX.md`
+- **코드베이스 개요**: `docs/analysis/01-codebase-overview.md`
+- **라우팅/페이지 맵**: `docs/analysis/02-routing-pages.md`
+- **데이터/저장소 전략**: `docs/analysis/03-data-model-storage.md`
+- **Supabase 연동 포인트**: `docs/analysis/04-supabase-integration.md`
+- **UI 셸(AppShell) & 네비**: `docs/analysis/05-ui-shell-navigation.md`
+- **모듈: 재료**: `docs/analysis/06-module-ingredients.md`
+- **모듈: 레시피**: `docs/analysis/07-module-recipes.md`
+- **모듈: 장보기**: `docs/analysis/08-module-shopping.md`
+- **모듈: 검색/추천/달력**: `docs/analysis/09-module-search-recommend-calendar.md`
+
+---
+
 ## 기술 스택
 
 | 항목 | 버전 / 설정 |
